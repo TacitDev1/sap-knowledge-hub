@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SAP Knowledge Hub</title>
+<meta name="description" content="SAP Knowledge Hub: an offline, zero-dependency SAP workbench. Code builder, reference notebook (FMs, BAPIs, BAdIs), T-codes, a second-brain wiki with a link graph and an offline ticket mirror. Template with invented demo data." />
+<meta name="theme-color" content="#06080b" />
+<link rel="icon" href="favicon.svg" type="image/svg+xml" />
+<link rel="stylesheet" href="css/hub.css" />
+</head>
+<body>
+<div class="rain" aria-hidden="true"></div>
+
+<aside class="sidebar">
+  <div class="logo">
+    <div class="mark">K</div>
+    <div><h1>Knowledge Hub<span>offline SAP workbench</span></h1></div>
+  </div>
+  <nav class="nav">
+    <button data-view="dash" class="active"><span class="ic" aria-hidden="true">01</span> Dashboard</button>
+    <button data-view="work"><span class="ic" aria-hidden="true">02</span> Code Builder</button>
+    <button data-view="inbox"><span class="ic" aria-hidden="true">03</span> From Claude <span id="inboxBadge" style="margin-left:auto;background:var(--blue);color:#04121b;border-radius:2px;padding:1px 7px;font-size:11px;font-weight:600;display:none"></span></button>
+    <button data-view="snip"><span class="ic" aria-hidden="true">04</span> Snippets</button>
+    <button data-view="ref"><span class="ic" aria-hidden="true">05</span> Reference</button>
+    <button data-view="cheat"><span class="ic" aria-hidden="true">06</span> Cheat Sheet</button>
+    <button data-view="tcode"><span class="ic" aria-hidden="true">07</span> T-Codes</button>
+    <button data-view="wiki"><span class="ic" aria-hidden="true">08</span> Second Brain</button>
+    <button data-view="tickets"><span class="ic" aria-hidden="true">09</span> My Tickets</button>
+    <button data-view="timesheet"><span class="ic" aria-hidden="true">10</span> Timesheet</button>
+    <button data-view="search"><span class="ic" aria-hidden="true">11</span> Search</button>
+  </nav>
+  <div class="foot">
+    static files only · no server<br>edits stay in this browser<br>not connected to SAP<br><br>template · invented data
+  </div>
+</aside>
+
+<main class="main">
+
+  <div class="statusbar">
+    <span class="on">● OFFLINE</span>
+    <span>LOCAL ONLY · NOT CONNECTED TO SAP</span>
+    <span>DEMO · INVENTED DATA</span>
+    <span class="sp">CTRL+R · REFRESH DATA</span>
+  </div>
+
+  <!-- DASHBOARD -->
+  <section class="view active" id="view-dash">
+    <div class="head">
+      <div><h2>Welcome back, Mara</h2><p>Build it here, copy it into SAP. Your hub, your rules.</p></div>
+      <div style="display:flex;gap:10px">
+        <button class="btn" onclick="exportData()">⭳ Backup</button>
+        <button class="btn" onclick="document.getElementById('importFile').click()">⭱ Restore</button>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="n" id="stat-snip">0</div><div class="l">Saved Snippets</div></div>
+      <div class="stat"><div class="n" id="stat-ref">0</div><div class="l">References Logged</div></div>
+      <div class="stat"><div class="n" id="stat-fm">0</div><div class="l">Function Modules</div></div>
+      <div class="stat"><div class="n" id="stat-bapi">0</div><div class="l">BAPIs</div></div>
+    </div>
+    <div class="tcode-note">New here? Everything on this page is invented demo data. Try <a class="wikilink" onclick="go('search');document.getElementById('globalSearch').focus()">searching everything</a> for <b>commit</b>, or open the <a class="wikilink" onclick="go('wiki');setTimeout(wikiShown,40)">wiki graph</a> and click a node.</div>
+    <div class="lbl">Workspaces</div>
+    <div class="grid">
+      <div class="card"><h3><span style="color:var(--blue)">▸</span> Code Builder</h3><div class="desc">A clean editor with ABAP colouring. Write, save, and copy your code over to SAP.</div><button class="btn sm" onclick="go('work')">Open editor →</button></div>
+      <div class="card"><h3><span style="color:var(--blue)">▸</span> From Claude</h3><div class="desc">Whatever Claude writes for you in chat lands here — ABAP, config walkthroughs, fixes — ready to use in SAP.</div><button class="btn sm" onclick="go('inbox')">Open inbox →</button></div>
+      <div class="card"><h3><span style="color:var(--blue)">▸</span> Snippets</h3><div class="desc">Save reusable blocks you keep rewriting — SELECTs, loops, ALV, BAPI calls.</div><button class="btn sm" onclick="go('snip')">Open library →</button></div>
+      <div class="card"><h3><span style="color:var(--blue)">▸</span> References</h3><div class="desc">Your own searchable notebook of FMs, BAPIs, BADIs, transactions and config, with examples.</div><button class="btn sm" onclick="go('ref')">Open notebook →</button></div>
+      <div class="card"><h3><span style="color:var(--blue)">▸</span> T-Codes</h3><div class="desc">A curated, searchable list of common SAP transaction codes, grouped by area. Click to copy.</div><button class="btn sm" onclick="go('tcode')">Open T-codes →</button></div>
+      <div class="card"><h3><span style="color:var(--blue)">▸</span> My Tickets</h3><div class="desc">Your assigned service-desk tickets, mirrored offline and refreshed each morning.</div><button class="btn sm" onclick="go('tickets')">Open tickets →</button></div>
+    </div>
+    <div class="lbl" style="margin-top:34px">Recent activity</div>
+    <div class="recent">
+      <div class="box" id="recentInbox"></div>
+      <div class="box" id="recentWiki"></div>
+    </div>
+  </section>
+
+  <!-- CODE BUILDER -->
+  <section class="view" id="view-work">
+    <div class="head">
+      <div><h2>Code Builder</h2><p>Type your code, hit copy, paste into SE38/SE80. Nothing here touches SAP.</p></div>
+      <div style="display:flex;gap:10px">
+        <select id="tpl" style="width:auto" onchange="loadTpl()">
+          <option value="">Insert template…</option>
+          <option value="report">Report skeleton</option>
+          <option value="select">SELECT into table</option>
+          <option value="loop">LOOP AT itab</option>
+          <option value="fmcall">CALL FUNCTION</option>
+          <option value="class">Local class</option>
+          <option value="try">TRY / CATCH</option>
+          <option value="selopt">Selection screen + guard rails</option>
+          <option value="salv">SALV grid (ALV)</option>
+          <option value="commit">BAPI + COMMIT / ROLLBACK</option>
+          <option value="guarded">Guarded update report</option>
+        </select>
+        <button class="btn" onclick="saveCurrentAsSnippet()">❖ Save as snippet</button>
+        <button class="btn primary" onclick="copyEditor()">⧉ Copy code</button>
+      </div>
+    </div>
+    <div class="editor-wrap">
+      <div class="editor-bar">
+        <div class="dots"><i></i><i></i><i></i></div>
+        <span class="fname">zworkbench.abap</span>
+        <button class="btn sm ghost" onclick="clearEditor()">Clear</button>
+      </div>
+      <div class="code-area">
+        <pre id="hlcode" aria-hidden="true"></pre>
+        <textarea id="code" spellcheck="false" placeholder="* Start typing your ABAP here..."></textarea>
+      </div>
+    </div>
+  </section>
+
+  <!-- FROM CLAUDE -->
+  <section class="view" id="view-inbox">
+    <div class="head">
+      <div><h2>From Claude</h2><p>Whatever Claude wrote for you in chat lands here. Hit Ctrl+R to pull in the latest.</p></div>
+      <span id="inboxStamp" style="color:var(--muted);font-size:12px"></span>
+    </div>
+    <div class="grid" id="inboxGrid"></div>
+  </section>
+
+  <!-- SNIPPETS -->
+  <section class="view" id="view-snip">
+    <div class="head"><div><h2>Snippets</h2><p>Your reusable building blocks.</p></div>
+      <button class="btn primary" onclick="openSnip()">+ New snippet</button></div>
+    <div class="toolbar"><input id="snipSearch" placeholder="🔍 Search snippets…" oninput="renderSnips()"></div>
+    <div class="grid" id="snipGrid"></div>
+  </section>
+
+  <!-- REFERENCES -->
+  <section class="view" id="view-ref">
+    <div class="head"><div><h2>Reference Notebook</h2><p>FMs, BAPIs, BADIs, transactions, config — build your own searchable reference as you learn.</p></div>
+      <button class="btn primary" onclick="openRef()">+ New entry</button></div>
+    <div class="toolbar">
+      <input id="refSearch" placeholder="🔍 Search by name or description…" oninput="renderRefs()">
+      <div class="seg" id="refFilter">
+        <button class="active" data-t="ALL">All</button>
+        <button data-t="FM">FM</button>
+        <button data-t="BAPI">BAPI</button>
+        <button data-t="BADI">BADI</button>
+        <button data-t="TXN">T-Code</button>
+        <button data-t="CLASS">Class</button>
+      </div>
+    </div>
+    <div id="claudeRefWrap"></div>
+    <div class="grid" id="refGrid"></div>
+  </section>
+
+  <!-- CHEAT SHEET -->
+  <section class="view" id="view-cheat">
+    <div class="head"><div><h2>ABAP Cheat Sheet</h2><p>Quick patterns — click any block to copy.</p></div></div>
+    <div id="cheat"></div>
+  </section>
+
+  <!-- T-CODES -->
+  <section class="view" id="view-tcode">
+    <div class="head">
+      <div><h2>T-Codes</h2><p>A curated, searchable list of common SAP transaction codes. Click any code to copy it.</p></div>
+      <span id="tcodeStamp" style="color:var(--muted);font-size:12px"></span>
+    </div>
+    <div class="toolbar">
+      <input id="tcodeSearch" placeholder="🔍 Search by code or what it does… (e.g. F110, payment, depreciation)" oninput="renderTcodes()" autocomplete="off">
+      <select id="tcodeModule" onchange="renderTcodes()"></select>
+    </div>
+    <div class="tcode-note">Not exhaustive — SAP has tens of thousands of T-codes that vary by system. The authority in your system is <b>SE93</b> (look one up) or <b>SE16 → table TSTC</b> (the full list). Ask Claude to add more.</div>
+    <div id="tcodeList"></div>
+  </section>
+
+  <!-- MY TICKETS -->
+  <section class="view" id="view-tickets">
+    <div class="head">
+      <div><h2>My Tickets</h2><p>Your assigned service-desk tickets, mirrored offline. Refreshed each morning. Ctrl+R for the latest.</p></div>
+      <span id="ticketsStamp" style="color:var(--muted);font-size:12px"></span>
+    </div>
+    <div id="ticketsList"></div>
+  </section>
+
+  <!-- TIMESHEET -->
+  <section class="view" id="view-timesheet">
+    <div class="head">
+      <div><h2>Timesheet</h2><p>Your week rebuilt from the service desk and the project plan. The what is filled in for you. You only add the hours.</p></div>
+      <span id="tsStamp" style="color:var(--muted);font-size:12px"></span>
+    </div>
+
+    <div class="ts-doc">
+      <div class="ts-chrome" aria-hidden="true"><span></span><span></span><span></span></div>
+      <div class="ts-page">
+
+        <header class="ts-hd">
+          <div>
+            <div class="ts-lbl">Reconstructed from tickets &amp; project plan</div>
+            <h3 class="ts-title" id="tsWeekLabel">No week in the snapshot</h3>
+          </div>
+          <div class="ts-total">
+            <span class="ts-total-n" id="tsTotal">0.0</span>
+            <span class="ts-total-u">hours logged</span>
+          </div>
+        </header>
+
+        <div id="tsDays"></div>
+
+        <footer class="ts-foot">
+          <p>Hours live in this browser only. Refreshing the data with <kbd>Ctrl</kbd> <kbd>R</kbd> will not clear them.</p>
+          <button class="ts-btn" onclick="tsCopy()">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 2h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"/><path d="M4 6v10a2 2 0 0 0 2 2h7"/></svg>
+            Copy week as text
+          </button>
+        </footer>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- SEARCH -->
+  <section class="view" id="view-search">
+    <div class="head">
+      <div><h2>Search everything</h2><p>One box across snippets, references, Claude's inbox, the wiki and your tickets.</p></div>
+    </div>
+    <div class="toolbar"><input id="globalSearch" placeholder="🔍 Type to search everything…" oninput="renderSearch()" autocomplete="off"></div>
+    <div id="searchResults"></div>
+  </section>
+
+  <!-- SECOND BRAIN (WIKI) -->
+  <section class="view" id="view-wiki">
+    <div class="head">
+      <div><h2>Second Brain</h2><p>Your interlinked SAP wiki: pages, links &amp; backlinks. Maintained by Claude; hit Ctrl+R for the latest.</p></div>
+      <span id="wikiStamp" style="color:var(--muted);font-size:12px"></span>
+    </div>
+    <div class="toolbar">
+      <input id="wikiSearch" placeholder="🔍 Filter nodes…" oninput="wikiFilter()">
+      <button class="btn sm" onclick="wikiReheat()">↻ Re-layout</button>
+      <span class="wk-chips" id="wkChips">
+        <button class="active" data-t="ALL" onclick="wikiTypeFilter('ALL',this)">All</button>
+        <button data-t="ticket" onclick="wikiTypeFilter('ticket',this)">Tickets</button>
+        <button data-t="object" onclick="wikiTypeFilter('object',this)">Objects</button>
+        <button data-t="concept" onclick="wikiTypeFilter('concept',this)">Concepts</button>
+        <button data-t="meta" onclick="wikiTypeFilter('meta',this)">Meta</button>
+      </span>
+      <span class="wiki-legend"><i style="background:#33a9e0"></i>Ticket<i style="background:#008FD3"></i>Concept<i style="background:#6f8a9c"></i>Object<i style="background:#5d6772"></i>Meta</span>
+    </div>
+    <div class="wiki-stage" id="wikiStage">
+      <svg id="wikiSvg" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="wiki-zoom">
+        <button onclick="gZoomBtn(1.25)" title="Zoom in">+</button>
+        <button onclick="gZoomBtn(0.8)" title="Zoom out">−</button>
+        <button onclick="gZoomReset()" title="Reset zoom" style="font-size:15px">⟲</button>
+      </div>
+      <div class="wiki-hint">drag nodes · drag canvas to pan · scroll / ± to zoom · click to open</div>
+      <aside class="wiki-reader" id="wikiReader">
+        <button class="wiki-reader-x" onclick="closeWikiReader()" title="Close">✕</button>
+        <div class="wiki-doc" id="wikiDoc"></div>
+      </aside>
+    </div>
+  </section>
+
+</main>
+
+<!-- SNIPPET MODAL -->
+<div class="modal-bg" id="snipModal">
+  <div class="modal">
+    <h3 id="snipTitle">New snippet</h3>
+    <div class="field"><label>Title</label><input id="snipName" placeholder="e.g. SELECT customers into itab"></div>
+    <div class="field"><label>Tags / note (optional)</label><input id="snipNote" placeholder="e.g. open SQL, KNA1"></div>
+    <div class="field"><label>Code</label><textarea id="snipCode" rows="9" spellcheck="false" style="font-family:monospace"></textarea></div>
+    <div class="actions"><button class="btn ghost" onclick="closeM('snipModal')">Cancel</button><button class="btn primary" onclick="saveSnip()">Save</button></div>
+  </div>
+</div>
+
+<!-- REF MODAL -->
+<div class="modal-bg" id="refModal">
+  <div class="modal">
+    <h3 id="refTitle">New reference</h3>
+    <div class="field"><label>Type</label>
+      <select id="refType"><option>FM</option><option>BAPI</option><option>BADI</option><option>CLASS</option></select></div>
+    <div class="field"><label>Name</label><input id="refName" placeholder="e.g. BAPI_USER_GET_DETAIL"></div>
+    <div class="field"><label>What it does</label><textarea id="refDesc" rows="3" placeholder="Short description / when to use it"></textarea></div>
+    <div class="field"><label>Example call / parameters (optional)</label><textarea id="refCode" rows="7" spellcheck="false" style="font-family:monospace"></textarea></div>
+    <div class="actions"><button class="btn ghost" onclick="closeM('refModal')">Cancel</button><button class="btn primary" onclick="saveRef()">Save</button></div>
+  </div>
+</div>
+
+<input type="file" id="importFile" accept="application/json" style="display:none" onchange="importData(this)">
+<div class="toast" id="toast" role="status" aria-live="polite">Copied!</div>
+
+<script src="data/inbox.js"></script>
+<script src="data/refs.js"></script>
+<script src="data/wiki.js"></script>
+<script src="data/tickets.js"></script>
+<script src="data/timesheet.js"></script>
+<script src="data/tcodes.js"></script>
+<script src="data/comments.js"></script>
+<script src="js/hub.js"></script>
+</body>
+</html>

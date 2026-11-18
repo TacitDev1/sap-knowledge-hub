@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "hub-static",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["scripts/serve.mjs", "5178"],
+      "port": 5178,
+      "url": "http://localhost:5178"
+    }
+  ]
+}
