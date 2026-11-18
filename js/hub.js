@@ -1,10 +1,21 @@
-/* ---------- storage ---------- */
-/* Everything the user edits lives in this browser, under one localStorage prefix. */
-const LS = "sapKnowledgeHub.";
-const DB = {
-  snips: JSON.parse(localStorage.getItem(LS + "snips") || "null"),
-  refs:  JSON.parse(localStorage.getItem(LS + "refs")  || "null"),
-};
+/* ---------- storage: none ---------- */
+/* Nothing is written to the browser. No localStorage, sessionStorage, cookies or IndexedDB.
+   Everything the user types lives in the variables below and is gone when the tab is closed or reloaded. */
+(function expungeOldVersions(){
+  /* Earlier versions kept edits in localStorage under these prefixes. Delete whatever they left behind. */
+  const OLD = ["sapKnowledgeHub.", "abapHub."];
+  ["localStorage", "sessionStorage"].forEach(name => {
+    try {
+      const store = window[name]; /* reading the property itself throws when storage is blocked */
+      for (let i = store.length - 1; i >= 0; i--){
+        const k = store.key(i);
+        if (k && OLD.some(p => k.indexOf(p) === 0)) store.removeItem(k);
+      }
+    } catch(e){ /* storage blocked or unavailable: nothing to delete */ }
+  });
+})();
+const MEM = { code: "", hours: {} };
+const DB = { snips: null, refs: null };
 if (!DB.snips) DB.snips = [
   { id:1, name:"ALV grid (simple)", note:"SALV factory",
     code:"cl_salv_table=>factory(\n  IMPORTING r_salv_table = DATA(go_alv)\n  CHANGING  t_table      = lt_data ).\ngo_alv->display( )." },
@@ -36,10 +47,9 @@ if (!DB.refs) DB.refs = [
     desc:"The quick way to show an internal table as an ALV grid. Display only.",
     code:"cl_salv_table=>factory(\n  IMPORTING r_salv_table = DATA(lo_alv)\n  CHANGING  t_table      = lt_output ).\nlo_alv->display( )." }
 ];
+/* Keeps the editor buffer in memory only. Snippets and references already live in DB. */
 function save(){
-  localStorage.setItem(LS + "snips", JSON.stringify(DB.snips));
-  localStorage.setItem(LS + "refs",  JSON.stringify(DB.refs));
-  localStorage.setItem(LS + "code",  document.getElementById("code").value);
+  MEM.code = document.getElementById("code").value;
 }
 
 /* ---------- nav ---------- */
@@ -99,7 +109,7 @@ function hl(){
   document.getElementById("hlcode").innerHTML = out + "\n";
 }
 const ta = document.getElementById("code");
-ta.value = localStorage.getItem(LS + "code") || "";
+ta.value = MEM.code;
 ta.addEventListener("input", () => { hl(); save(); });
 ta.addEventListener("scroll", () => {
   const p = document.getElementById("hlcode");
@@ -165,7 +175,7 @@ function saveSnip(){
   } else {
     DB.snips.unshift({ id: Date.now(), name: snipName.value, note: snipNote.value, code: snipCode.value });
   }
-  save(); renderSnips(); renderStats(); closeM("snipModal"); toast("Saved ✓");
+  save(); renderSnips(); renderStats(); closeM("snipModal"); toast("Added for this session ✓");
 }
 function delSnip(id){ if (!confirm("Delete this snippet?")) return; DB.snips = DB.snips.filter(x => x.id !== id); save(); renderSnips(); renderStats(); }
 function renderSnips(){
@@ -213,7 +223,7 @@ function saveRef(){
   } else {
     DB.refs.unshift({ id: Date.now(), type: refType.value, name: refName.value, desc: refDesc.value, code: refCode.value });
   }
-  save(); renderRefs(); renderStats(); closeM("refModal"); toast("Saved ✓");
+  save(); renderRefs(); renderStats(); closeM("refModal"); toast("Added for this session ✓");
 }
 function delRef(id){ if (!confirm("Delete this entry?")) return; DB.refs = DB.refs.filter(x => x.id !== id); save(); renderRefs(); renderStats(); }
 function renderRefs(){
@@ -319,7 +329,7 @@ function inboxToEditor(i){
 function inboxSave(i){
   const it = (window.CLAUDE_INBOX.items || [])[i];
   DB.snips.unshift({ id: Date.now(), name: it.title || "From Claude", note: it.note || "", code: it.code || "" });
-  save(); renderSnips(); renderStats(); toast("Saved to snippets ✓");
+  save(); renderSnips(); renderStats(); toast("Added to snippets for this session ✓");
 }
 
 /* ---------- cheat sheet ---------- */
@@ -375,30 +385,6 @@ function renderCheat(){
       <h3 style="font-size:13px;color:var(--accent2)">${escH(it[0])}</h3>
       <pre style="margin:0">${escH(it[1])}</pre></div>`).join("")
   }</div></div>`).join("");
-}
-
-/* ---------- backup / restore ---------- */
-function exportData(){
-  const data = JSON.stringify({ snips: DB.snips, refs: DB.refs, code: localStorage.getItem(LS + "code") || "", exported: new Date().toISOString() }, null, 2);
-  const blob = new Blob([data], { type: "application/json" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob); a.download = "knowledge-hub-backup.json"; a.click();
-  URL.revokeObjectURL(a.href); toast("Backup saved ✓");
-}
-function importData(input){
-  const f = input.files[0]; if (!f) return;
-  const r = new FileReader();
-  r.onload = () => {
-    try {
-      const d = JSON.parse(r.result);
-      if (Array.isArray(d.snips)) DB.snips = d.snips;
-      if (Array.isArray(d.refs))  DB.refs  = d.refs;
-      if (typeof d.code === "string"){ document.getElementById("code").value = d.code; hl(); }
-      save(); renderSnips(); renderRefs(); renderStats(); toast("Backup restored ✓");
-    } catch(e){ toast("That file is not a valid backup"); }
-    input.value = "";
-  };
-  r.readAsText(f);
 }
 
 /* ---------- misc ---------- */
@@ -701,8 +687,7 @@ function toggleCmt(btn){
 }
 
 /* ---------- timesheet ---------- */
-const TS_HKEY = LS + "timesheet.hours";
-function tsHours(){ try { return JSON.parse(localStorage.getItem(TS_HKEY) || "{}"); } catch(e){ return {}; } }
+function tsHours(){ return MEM.hours; }
 function tsWeek(){
   const box = window.CLAUDE_TIMESHEET || {};
   const weeks = Array.isArray(box.weeks) ? box.weeks : [];
@@ -780,7 +765,6 @@ function tsSetHours(input){
   const store = tsHours();
   const raw = (input.value || "").trim().replace(",", ".");
   if (!raw) delete store[id]; else store[id] = raw;
-  try { localStorage.setItem(TS_HKEY, JSON.stringify(store)); } catch(e){}
   tsTotal();
 }
 function tsTotal(){

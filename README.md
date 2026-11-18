@@ -2,6 +2,8 @@
 
 An offline, zero-dependency workbench for SAP developers and consultants. It opens from a folder with a double-click: no server, no build step, no install, no network calls.
 
+> **No customer data is saved in this SAP Knowledge Hub. Nothing is stored, and everything is always expunged.** See [Privacy](#privacy).
+
 > **Sanitised template.** This is a public template of a tool I use day to day. All data in it is invented: the consultancy *Larkwell Consulting*, the clients *Brackenfield Waste* and *Osterby Utilities*, the systems BD1/BQ1/BP1, the tickets, the people and the timesheet. Any resemblance to real companies, people or tickets is coincidental. The SAP objects and transaction codes are standard, publicly documented SAP names; the explanations are written in my own words.
 
 **Live demo:** [tacitdev1.github.io/sap-knowledge-hub](https://tacitdev1.github.io/sap-knowledge-hub/). Try [Search for "commit"](https://tacitdev1.github.io/sap-knowledge-hub/#search?q=commit), then open the [Second Brain graph](https://tacitdev1.github.io/sap-knowledge-hub/#wiki) and click a node.
@@ -42,7 +44,7 @@ flowchart LR
   end
   subgraph browser["Browser"]
     G["window.CLAUDE_* globals"] --> APP["js/hub.js<br/>render 11 views"]
-    APP <--> LS[("localStorage<br/>sapKnowledgeHub.*")]
+    APP <--> MEM[("in-memory state<br/>gone on close or reload")]
   end
   WJS -- "&lt;script&gt;" --> G
   D -- "&lt;script&gt;" --> G
@@ -50,7 +52,7 @@ flowchart LR
 ```
 
 - **Data as script tags.** Each data file sets one global (`window.CLAUDE_REFS = {...}`). Browsers load `<script src>` from `file://` without complaint, while `fetch()` of JSON would be blocked. That one choice is why the hub runs from a folder with no server.
-- **Read-only data, local edits.** The data files are the "published" content. Anything you create in the page (snippets, notebook entries, the editor buffer, timesheet hours) is kept in `localStorage` under the `sapKnowledgeHub.` prefix, with Backup / Restore buttons on the dashboard.
+- **Read-only data, throwaway edits.** The data files are the "published" content. Anything you create in the page (snippets, notebook entries, the editor buffer, timesheet hours) lives in JavaScript variables only and is gone when you close or reload the tab.
 - **No dependencies.** Plain HTML, CSS and one script. The wiki graph is a hand-written force simulation in SVG; the Markdown renderer is about 40 lines.
 - **Relative paths only**, so the same files work from disk, from `localhost` and from a GitHub Pages sub-path.
 - The `CLAUDE_*` names come from the original workflow, where an AI assistant refreshes the data files each morning. They are just global names; nothing here calls an AI service.
@@ -122,6 +124,25 @@ This repo was cut from a private tool, so every push runs `scripts/leak-scan.mjs
 ```bash
 node scripts/leak-scan.mjs
 ```
+
+## Privacy
+
+No customer data is saved in this SAP Knowledge Hub. Nothing is stored, and everything is always expunged.
+
+What it does:
+
+- Reads its own files (`index.html`, `css/`, `js/`, `data/`) from the same place the page came from, and nothing else.
+- Keeps anything you type (code, snippets, notebook entries, timesheet hours) in memory while the tab is open. Closing or reloading the tab wipes it.
+- On load, deletes the `sapKnowledgeHub.*` and `abapHub.*` keys that earlier versions of the hub left in the browser. It does not touch any other keys.
+
+What it does not do:
+
+- **No storage.** It never writes to `localStorage`, `sessionStorage`, IndexedDB or the Cache API, and registers no service worker. It offers no download or export of what you typed.
+- **No cookies.** It neither sets nor reads any.
+- **No tracking.** There is no analytics, telemetry, error reporting or fingerprinting.
+- **No outside requests.** It loads no fonts, CDNs or third-party scripts, and it sends nothing anywhere. A Content-Security-Policy in `index.html` (`default-src 'self'`, `connect-src 'none'`, `form-action 'none'`) makes the browser refuse any other request even if one were added by mistake. The only outside addresses in the data are the demo ticket links, which open only when you click them.
+
+The demo is hosted on GitHub Pages. GitHub may keep its own server logs for the pages it serves (see GitHub's privacy statement). The hub itself adds nothing to that.
 
 ## Licence
 
