@@ -199,6 +199,10 @@
   .tag.TXN{background:var(--blue-soft);color:var(--blue)}
   .tag.CLASS{background:rgba(51,169,224,.15);color:var(--blue-br)}
   .tag.SNIPPET{background:var(--blue-soft);color:var(--blue)}
+  .tag.AUTH{background:rgba(217,164,65,.15);color:var(--warn)}
+  .tag.TABLE{background:rgba(111,138,156,.16);color:var(--fn)}
+  .tag.REPORT{background:rgba(95,185,143,.15);color:var(--good)}
+  .tag.FIORI{background:rgba(51,169,224,.15);color:var(--blue-br)}
 
   .toolbar{display:flex;gap:10px;align-items:center;margin-bottom:20px;flex-wrap:wrap}
   .toolbar input{max-width:360px}
@@ -354,6 +358,7 @@
   .tk-cmt-toggle::after{content:"v";font-size:10px;transition:transform .18s}
   .tk-cmt-toggle.open::after{transform:rotate(180deg)}
   .tk-thread{margin-top:13px;border-left:1px solid var(--line2);padding-left:15px;display:flex;flex-direction:column;gap:13px}
+  .tk-thread[hidden]{display:none}
   .tk-cmt-h{display:flex;gap:10px;align-items:baseline;margin-bottom:3px}
   .tk-cmt-a{font-weight:700;font-size:12px;color:var(--txt)}
   .tk-cmt-d{font-size:11px;color:var(--dim)}
@@ -394,173 +399,3 @@
     .gpulse{animation:none;display:none}
     *{scroll-behavior:auto !important}
   }
-
-/* ============================================================
-   TIMESHEET — premium utilitarian minimalism, scoped.
-   Deliberately a different aesthetic to the console: warm bone
-   canvas, editorial serif, hairline structure. Everything below
-   is namespaced .ts-* / #view-timesheet so no other view moves.
-   Offline rule respected: system fonts only, no CDN, no remote
-   images, icons are inline SVG.
-   ============================================================ */
-#view-timesheet{
-  --ts-canvas:#F7F6F3;  --ts-surface:#FFFFFF;  --ts-surface-2:#F9F9F8;
-  --ts-line:#EAEAEA;    --ts-line-soft:rgba(0,0,0,.06);
-  --ts-ink:#111111;     --ts-muted:#787774;
-  --ts-blue-bg:#E1F3FE; --ts-blue-fg:#1F6C9F;
-  --ts-green-bg:#EDF3EC;--ts-green-fg:#346538;
-  --ts-yellow-bg:#FBF3DB;--ts-yellow-fg:#956400;
-  --ts-serif:Constantia,Cambria,Georgia,"Times New Roman",serif;
-  --ts-sans:"Segoe UI Variable Display","Segoe UI",system-ui,sans-serif;
-}
-/* the document itself — a bordered sheet, faux-OS chrome on top */
-.ts-doc{
-  max-width:1000px; margin:0 0 40px;
-  border:1px solid var(--ts-line); border-radius:12px; overflow:hidden;
-  background:var(--ts-canvas);
-  box-shadow:0 2px 8px rgba(0,0,0,.04);
-}
-.ts-chrome{
-  display:flex; align-items:center; gap:7px;
-  padding:11px 16px; background:var(--ts-surface);
-  border-bottom:1px solid var(--ts-line);
-}
-.ts-chrome span{ width:11px; height:11px; border-radius:50%; background:#E4E4E2; }
-.ts-page{
-  padding:54px 56px 38px;
-  background:var(--ts-canvas);
-  font-family:var(--ts-sans);
-  color:var(--ts-ink); font-size:14px; line-height:1.6;
-  /* depth without imagery: one warm light spot, offline-safe */
-  background-image:radial-gradient(60% 45% at 82% 0%,rgba(180,150,110,.05),transparent 70%);
-}
-/* header */
-.ts-hd{
-  display:flex; align-items:flex-end; justify-content:space-between; gap:30px;
-  padding-bottom:22px; margin-bottom:8px; border-bottom:1px solid var(--ts-line);
-}
-.ts-lbl{
-  font-family:var(--mono); font-size:10.5px; letter-spacing:.16em;
-  text-transform:uppercase; color:var(--ts-muted); margin-bottom:12px;
-}
-.ts-title{
-  font-family:var(--ts-serif); font-size:38px; font-weight:400;
-  letter-spacing:-.03em; line-height:1.1; color:var(--ts-ink);
-  margin:0; text-wrap:balance;
-}
-.ts-total{ text-align:right; flex:none; }
-.ts-total-n{
-  display:block; font-family:var(--ts-serif); font-size:38px; letter-spacing:-.03em;
-  color:var(--ts-ink); font-variant-numeric:tabular-nums; line-height:1.1;
-}
-.ts-total-u{
-  display:block; font-family:var(--mono); font-size:10.5px; letter-spacing:.12em;
-  text-transform:uppercase; color:var(--ts-muted); margin-top:6px;
-}
-/* one day = one hairline-separated block */
-.ts-day{ border-bottom:1px solid var(--ts-line); padding:30px 0; }
-.ts-day:last-child{ border-bottom:0; padding-bottom:8px; }
-.ts-day-h{ display:flex; align-items:baseline; gap:14px; margin-bottom:18px; }
-.ts-dow{
-  font-family:var(--mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase;
-  color:var(--ts-ink); font-weight:600;
-}
-.ts-date{ font-family:var(--mono); font-size:11px; letter-spacing:.08em; color:var(--ts-muted); }
-.ts-day-rule{ flex:1; height:1px; background:var(--ts-line); }
-/* entry card — flat, generous, 1px only */
-.ts-entry{
-  background:var(--ts-surface); border:1px solid var(--ts-line); border-radius:8px;
-  padding:24px 26px; margin-bottom:12px;
-  transition:box-shadow .2s ease, border-color .2s ease;
-}
-.ts-entry:last-child{ margin-bottom:0; }
-.ts-entry:hover{ box-shadow:0 2px 8px rgba(0,0,0,.04); border-color:#E0E0DE; }
-.ts-entry-top{ display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px; }
-.ts-ref{
-  font-family:var(--mono); font-size:12px; font-weight:600; letter-spacing:.02em;
-  color:var(--ts-ink); text-decoration:none; border-bottom:1px solid var(--ts-line-soft);
-}
-.ts-ref:hover{ border-bottom-color:var(--ts-ink); }
-.ts-ref.plain{ border-bottom:0; color:var(--ts-muted); font-weight:400; }
-.ts-pill{
-  font-family:var(--ts-sans); font-size:10.5px; font-weight:600; letter-spacing:.05em;
-  text-transform:uppercase; padding:3px 10px; border-radius:9999px;
-}
-.ts-pill.c1{ background:var(--ts-blue-bg);   color:var(--ts-blue-fg); }
-.ts-pill.c2{ background:var(--ts-green-bg); color:var(--ts-green-fg); }
-.ts-pill.none{ background:var(--ts-yellow-bg); color:var(--ts-yellow-fg); }
-.ts-src{
-  margin-left:auto; font-family:var(--mono); font-size:10.5px; letter-spacing:.08em;
-  text-transform:uppercase; color:var(--ts-muted);
-}
-.ts-entry-title{
-  font-family:var(--ts-serif); font-size:19px; letter-spacing:-.015em; line-height:1.3;
-  color:var(--ts-ink); margin:0 0 10px; text-wrap:balance;
-}
-.ts-what{ color:#2F3437; margin:0; max-width:66ch; text-wrap:pretty; }
-/* hours row */
-.ts-hrs{
-  display:flex; align-items:center; justify-content:flex-end; gap:12px;
-  margin-top:20px; padding-top:16px; border-top:1px solid var(--ts-line);
-}
-.ts-hrs label{
-  font-family:var(--mono); font-size:10.5px; letter-spacing:.12em;
-  text-transform:uppercase; color:var(--ts-muted);
-}
-.ts-hrs input{
-  width:82px; padding:8px 10px; text-align:right;
-  font-family:var(--mono); font-size:13px; font-variant-numeric:tabular-nums;
-  color:var(--ts-ink); background:var(--ts-surface-2);
-  border:1px solid var(--ts-line); border-radius:4px; outline:none;
-  transition:border-color .15s ease;
-}
-.ts-hrs input:focus{ border-color:#111; }
-.ts-hrs input::placeholder{ color:var(--ts-muted); }
-/* empty day */
-.ts-empty{
-  background:var(--ts-surface-2); border:1px dashed var(--ts-line); border-radius:8px;
-  padding:22px 26px; color:var(--ts-muted); max-width:66ch;
-}
-.ts-empty p{ margin:10px 0 0; }
-/* footer */
-.ts-foot{
-  display:flex; align-items:center; justify-content:space-between; gap:24px;
-  flex-wrap:wrap; margin-top:34px; padding-top:22px; border-top:1px solid var(--ts-line);
-}
-.ts-foot p{ margin:0; font-size:12.5px; color:var(--ts-muted); }
-#view-timesheet kbd{
-  font-family:var(--mono); font-size:11px; padding:2px 6px;
-  border:1px solid var(--ts-line); border-radius:4px;
-  background:var(--ts-surface); color:var(--ts-ink);
-}
-.ts-btn{
-  display:inline-flex; align-items:center; gap:8px; flex:none;
-  font-family:var(--ts-sans); font-size:13px; font-weight:500;
-  padding:10px 16px; border:0; border-radius:5px; cursor:pointer;
-  background:#111111; color:#FFFFFF;
-  transition:background .15s ease, transform .1s ease;
-}
-.ts-btn:hover{ background:#333333; }
-.ts-btn:active{ transform:scale(.98); }
-.ts-btn svg{
-  width:15px; height:15px; fill:none; stroke:currentColor;
-  stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round;
-}
-/* scroll entry — staggered, transform/opacity only */
-.ts-reveal{ opacity:0; transform:translateY(12px); }
-.ts-reveal.in{
-  opacity:1; transform:none;
-  transition:opacity .6s cubic-bezier(.16,1,.3,1), transform .6s cubic-bezier(.16,1,.3,1);
-  transition-delay:calc(var(--i,0) * 80ms);
-}
-@media (prefers-reduced-motion:reduce){
-  .ts-reveal{ opacity:1; transform:none; }
-  .ts-reveal.in{ transition:none; transition-delay:0s; }
-  .ts-entry{ transition:none; }
-}
-@media (max-width:900px){
-  .ts-page{ padding:36px 24px 28px; }
-  .ts-hd{ flex-direction:column; align-items:flex-start; gap:18px; }
-  .ts-total{ text-align:left; }
-  .ts-title,.ts-total-n{ font-size:30px; }
-}

@@ -1,121 +1,127 @@
-/* Researched references: FMs, BAPIs, BAdIs and classes. Shape: { generatedAt, items:[{ type: FM|BAPI|BADI|CLASS, name, desc, code }] }
+/* Researched references. Shape: { generatedAt, items:[{ type: AUTH|TABLE|FM|REPORT|FIORI, name, desc, code }] }
    Invented demo data for the SAP Knowledge Hub template. Edit freely. */
 window.CLAUDE_REFS = {
-  "generatedAt": "2026-11-16",
+  "generatedAt": "2026-11-19",
   "items": [
     {
-      "type": "BAPI",
-      "name": "BAPI_SALESORDER_CREATEFROMDAT2",
-      "desc": "Creates a sales order. Header, items, partners and schedule lines go in as tables; the order number comes back in SALESDOCUMENT. Does not commit on its own. Partner roles use the internal codes (AG sold-to, WE ship-to).",
-      "code": "CALL FUNCTION 'BAPI_SALESORDER_CREATEFROMDAT2'\n  EXPORTING order_header_in  = ls_head\n            order_header_inx = ls_headx\n  IMPORTING salesdocument    = lv_vbeln\n  TABLES    return           = lt_return\n            order_items_in   = lt_items\n            order_items_inx  = lt_itemx\n            order_partners   = lt_partners."
+      "type": "AUTH",
+      "name": "S_TCODE",
+      "desc": "Checked when a transaction starts. One field, TCD. A user without the code in a role gets \"You are not authorized to use transaction ...\". Wildcards (SU*) count, so review them.",
+      "code": "AUTHORITY-CHECK OBJECT 'S_TCODE'\n  ID 'TCD' FIELD 'SU01'.\n\" or the FM: AUTHORITY_CHECK_TCODE"
     },
     {
-      "type": "BAPI",
-      "name": "BAPI_TRANSACTION_COMMIT",
-      "desc": "Commits what a BAPI has queued. Pass WAIT = X when you read the result back straight away, so the update task has finished first.",
-      "code": "CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'\n  EXPORTING wait   = abap_true\n  IMPORTING return = ls_return."
+      "type": "AUTH",
+      "name": "S_SERVICE",
+      "desc": "Checked when a user calls an OData or other external service. Fields SRV_NAME (a generated hash) and SRV_TYPE (HT for Gateway services). Never typed by hand: add the service to the role menu and PFCG fills it in.",
+      "code": "PFCG -> Menu -> Authorization Default\n  -> TADIR Service\n  -> R3TR IWSG ZBRW_DRIVER_SRV_0001"
     },
     {
-      "type": "BAPI",
-      "name": "BAPI_TRANSACTION_ROLLBACK",
-      "desc": "Throws away everything queued in the current LUW. Call it whenever RETURN holds an E or A message.",
-      "code": "CALL FUNCTION 'BAPI_TRANSACTION_ROLLBACK'."
+      "type": "AUTH",
+      "name": "S_RFC",
+      "desc": "Checked when a function module is called remotely. RFC_TYPE is FUGR or FUNC, RFC_NAME the group or module, ACTVT 16. Prefer single modules over whole groups for technical users.",
+      "code": "S_RFC\n  RFC_TYPE = FUNC\n  RFC_NAME = BAPI_USER_GET_DETAIL\n  ACTVT    = 16"
     },
     {
-      "type": "BAPI",
-      "name": "BAPI_GOODSMVT_CREATE",
-      "desc": "Posts a goods movement (the MIGO equivalent). GM_CODE picks the scenario: 01 GR for PO, 03 goods issue, 04 transfer posting, 05 other receipt. Returns the material document and year.",
-      "code": "CALL FUNCTION 'BAPI_GOODSMVT_CREATE'\n  EXPORTING goodsmvt_header  = ls_head\n            goodsmvt_code    = ls_code\n  IMPORTING materialdocument = lv_mblnr\n            matdocumentyear  = lv_mjahr\n  TABLES    goodsmvt_item    = lt_items\n            return           = lt_return."
+      "type": "AUTH",
+      "name": "S_RFCACL",
+      "desc": "Trusted RFC. Lets a user in a trusted system log on here without a password. Lives in the role of the user in the trusting (target) system. Keep RFC_EQUSER = Y and avoid a wildcard RFC_USER.",
+      "code": "RFC_SYSID  = <calling system ID>\nRFC_CLIENT = 100\nRFC_USER   = (blank when RFC_EQUSER = Y)\nRFC_EQUSER = Y\nACTVT      = 16"
     },
     {
-      "type": "BAPI",
-      "name": "BAPI_PO_CREATE1",
-      "desc": "Creates a purchase order with the same checks as ME21N, so ME_PROCESS_PO_CUST runs too. Every field you fill in POITEM needs its X flag in POITEMX.",
-      "code": "CALL FUNCTION 'BAPI_PO_CREATE1'\n  EXPORTING poheader         = ls_head\n            poheaderx        = ls_headx\n  IMPORTING exppurchaseorder = lv_ebeln\n  TABLES    return           = lt_return\n            poitem           = lt_item\n            poitemx          = lt_itemx."
+      "type": "AUTH",
+      "name": "S_TABU_NAM",
+      "desc": "Table access by table name, for SE16, SM30 and the generic table tools. Use it instead of S_TABU_DIS when you want to grant one table rather than a whole authorization group.",
+      "code": "AUTHORITY-CHECK OBJECT 'S_TABU_NAM'\n  ID 'ACTVT'     FIELD '03'\n  ID 'TABLE'     FIELD 'AGR_USERS'."
     },
     {
-      "type": "BAPI",
-      "name": "BAPI_MATERIAL_GET_DETAIL",
-      "desc": "Reads general, plant and valuation data for one material without touching MARA/MARC directly.",
-      "code": "CALL FUNCTION 'BAPI_MATERIAL_GET_DETAIL'\n  EXPORTING material              = lv_matnr\n            plant                 = '1000'\n  IMPORTING material_general_data = ls_general\n            return                = ls_return."
+      "type": "AUTH",
+      "name": "S_USER_AGR",
+      "desc": "Who may maintain or assign roles. Field ACT_GROUP is the role name, so a naming convention (Z_BRW_*) lets you hand a team its own roles only.",
+      "code": "S_USER_AGR\n  ACT_GROUP = Z_BRW_*\n  ACTVT     = 01, 02, 03, 22"
     },
     {
-      "type": "BAPI",
-      "name": "BAPI_ALM_ORDER_MAINTAIN",
-      "desc": "Creates or changes plant maintenance orders. Driven by a METHODS table (CREATE, CHANGE, SAVE...) that refers to rows in the header and operation tables.",
-      "code": "CALL FUNCTION 'BAPI_ALM_ORDER_MAINTAIN'\n  TABLES it_methods   = lt_methods\n         it_header    = lt_header\n         it_operation = lt_oper\n         return       = lt_return."
+      "type": "AUTH",
+      "name": "M_MSEG_WWA",
+      "desc": "Goods movements by plant. The plant check the weighbridge clerks failed in BRW-118. Its siblings are M_MSEG_BWA (movement type) and M_MSEG_LGO (storage location).",
+      "code": "AUTHORITY-CHECK OBJECT 'M_MSEG_WWA'\n  ID 'ACTVT' FIELD '01'\n  ID 'WERKS' FIELD lv_plant."
     },
     {
-      "type": "FM",
-      "name": "CONVERSION_EXIT_ALPHA_OUTPUT",
-      "desc": "Strips leading zeros for display. In new code the string template option ALPHA = OUT does the same.",
-      "code": "CALL FUNCTION 'CONVERSION_EXIT_ALPHA_OUTPUT'\n  EXPORTING input  = lv_kunnr\n  IMPORTING output = lv_show."
+      "type": "TABLE",
+      "name": "AGR_USERS",
+      "desc": "Which user has which role, with validity dates. The first table to look at in an access review.",
+      "code": "SELECT agr_name, from_dat, to_dat\n  FROM agr_users\n  WHERE uname = @lv_user\n  INTO TABLE @DATA(lt_roles)."
     },
     {
-      "type": "FM",
-      "name": "NUMBER_GET_NEXT",
-      "desc": "Draws the next number from a number range object (SNRO). Safe under parallel load, unlike SELECT MAX( ) + 1.",
-      "code": "CALL FUNCTION 'NUMBER_GET_NEXT'\n  EXPORTING nr_range_nr = '01'\n            object      = 'ZWEIGHTKT'\n  IMPORTING number      = lv_number\n  EXCEPTIONS OTHERS     = 1."
+      "type": "TABLE",
+      "name": "AGR_1251",
+      "desc": "The authorization values inside each role: object, field, low and high. Filter DELETED = space, or you will read values that were removed from the role.",
+      "code": "SE16N -> AGR_1251\n  AGR_NAME = Z_BRW_*\n  OBJECT   = S_TCODE\n  DELETED  = (blank)"
     },
     {
-      "type": "FM",
-      "name": "GUI_UPLOAD",
-      "desc": "Reads a file from the user's PC into an internal table. Foreground only; in background jobs read from the application server instead.",
-      "code": "CALL FUNCTION 'GUI_UPLOAD'\n  EXPORTING filename            = lv_file\n            filetype            = 'ASC'\n            has_field_separator = abap_true\n  TABLES    data_tab            = lt_raw."
+      "type": "TABLE",
+      "name": "USR02",
+      "desc": "Logon data: user type, validity, last logon and lock status. UFLAG 64 is an admin lock, 128 a lock from failed logons.",
+      "code": "SELECT bname, uflag, trdat\n  FROM usr02\n  WHERE uflag <> 0\n  INTO TABLE @DATA(lt_locked)."
     },
     {
-      "type": "FM",
-      "name": "BAL_LOG_CREATE",
-      "desc": "Opens an application log. Add messages with BAL_LOG_MSG_ADD, save with BAL_DB_SAVE, read them in SLG1.",
-      "code": "CALL FUNCTION 'BAL_LOG_CREATE'\n  EXPORTING i_s_log      = ls_log\n  IMPORTING e_log_handle = lv_handle."
-    },
-    {
-      "type": "FM",
-      "name": "ENQUEUE_EZ_EXAMPLE",
-      "desc": "Pattern for a lock module generated from a lock object (SE11, name starts with EZ). Always pair with the DEQUEUE_ module.",
-      "code": "CALL FUNCTION 'ENQUEUE_EZ_EXAMPLE'\n  EXPORTING mode_ztable = 'E'\n            key_field   = lv_key\n  EXCEPTIONS foreign_lock = 1\n             OTHERS       = 2."
+      "type": "TABLE",
+      "name": "USOBT_C",
+      "desc": "Your SU24 proposals: which authorization values PFCG should propose for a transaction or service. Fix missing defaults here, not by hand in every role.",
+      "code": "SU24 -> Transaction or TADIR service\n  -> Object: check indicator + proposal\n  -> Save to a transport"
     },
     {
       "type": "FM",
-      "name": "IDOC_INBOUND_WRITE_TO_DB",
-      "desc": "Writes an inbound IDoc to the database from your own code, for example when a file arrives outside the usual port. Processing then follows the partner profile.",
-      "code": "CALL FUNCTION 'IDOC_INBOUND_WRITE_TO_DB'\n  EXPORTING pi_status_message = ls_status\n  IMPORTING pe_idoc_number    = lv_docnum\n  TABLES    t_data_records    = lt_edidd\n  CHANGING  pc_control_record = ls_edidc."
+      "name": "AUTHORITY_CHECK_TCODE",
+      "desc": "Checks S_TCODE for a transaction from your own code, the same way the system does when the transaction starts.",
+      "code": "CALL FUNCTION 'AUTHORITY_CHECK_TCODE'\n  EXPORTING  tcode  = 'SU01'\n  EXCEPTIONS ok     = 0\n             not_ok = 1\n             OTHERS = 2."
     },
     {
-      "type": "BADI",
-      "name": "ME_PROCESS_PO_CUST",
-      "desc": "The main enhancement point for purchase orders in ME21N/ME22N and BAPI_PO_CREATE1. CHECK can block the save (set CH_FAILED), PROCESS_ITEM can default fields.",
-      "code": "METHOD if_ex_me_process_po_cust~process_item.\n  DATA(ls_item) = im_item->get_data( ).\n  \" default or validate fields here\nENDMETHOD."
+      "type": "FM",
+      "name": "SUSR_USER_AUTH_FOR_OBJ_GET",
+      "desc": "Reads the values a user holds for one authorization object, from the user buffer. Useful to explain why a check passes or fails.",
+      "code": "CALL FUNCTION 'SUSR_USER_AUTH_FOR_OBJ_GET'\n  EXPORTING user_name = lv_user\n            sel_object = 'M_MSEG_WWA'\n  TABLES    values     = lt_values."
     },
     {
-      "type": "BADI",
-      "name": "BADI_SD_SALES",
-      "desc": "Kernel BAdI for sales documents. Lets you check or fill fields on header and item save without touching user exits in MV45AFZZ.",
-      "code": "\" implement in SE19 as a new BAdI implementation\n\" filter by sales document type where possible"
+      "type": "FM",
+      "name": "BAPI_USER_ACTGROUPS_ASSIGN",
+      "desc": "Assigns roles to a user. Careful: it replaces the full list, so read the current roles first and send them back with the new one.",
+      "code": "CALL FUNCTION 'BAPI_USER_ACTGROUPS_ASSIGN'\n  EXPORTING username       = lv_user\n  TABLES    activitygroups = lt_all_roles\n            return         = lt_return."
     },
     {
-      "type": "BADI",
-      "name": "MB_DOCUMENT_BADI",
-      "desc": "Runs when a material document is posted. MB_DOCUMENT_BEFORE_UPDATE sees the final document and is a good place for follow-on logging.",
-      "code": "METHOD if_ex_mb_document_badi~mb_document_before_update.\n  \" xmkpf / xmseg hold the new document\nENDMETHOD."
+      "type": "REPORT",
+      "name": "RSUSR002",
+      "desc": "Users by complex selection criteria: who holds a given object with given values, across all their roles. The authority behind every access review question.",
+      "code": "SUIM -> User -> Users by Complex Selection Criteria\n  (or SE38 -> RSUSR002)"
     },
     {
-      "type": "CLASS",
-      "name": "CL_SALV_TABLE",
-      "desc": "Shows an internal table as an ALV grid with sorting, filters and export, in four lines. Display only: use CL_GUI_ALV_GRID if users must edit.",
-      "code": "cl_salv_table=>factory(\n  IMPORTING r_salv_table = DATA(lo_alv)\n  CHANGING  t_table      = lt_output ).\nlo_alv->display( )."
+      "type": "REPORT",
+      "name": "PFCG_TIME_DEPENDENCY",
+      "desc": "User master comparison as a job. Removes profiles from expired role assignments and adds them for assignments that start today. Schedule it daily, shortly after midnight.",
+      "code": "SM36 -> step: ABAP program PFCG_TIME_DEPENDENCY\n  -> periodic, daily"
     },
     {
-      "type": "CLASS",
-      "name": "CL_ABAP_TYPEDESCR",
-      "desc": "Runtime type information (RTTI). DESCRIBE_BY_DATA tells you the type of any variable, which helps when building generic tools.",
-      "code": "DATA(lo_type) = cl_abap_typedescr=>describe_by_data( lv_any ).\nWRITE lo_type->absolute_name."
+      "type": "REPORT",
+      "name": "/UI2/INVALIDATE_CLIENT_CACHES",
+      "desc": "Clears the launchpad caches for the client after catalog, space or role changes. Its global sibling /UI2/INVALIDATE_GLOBAL_CACHES clears every client.",
+      "code": "SE38 -> /UI2/INVALIDATE_CLIENT_CACHES\n  -> for all users, then ask the user to clear the browser cache"
     },
     {
-      "type": "CLASS",
-      "name": "CL_BCS",
-      "desc": "Business Communication Services. Builds and sends mail with attachments; the mail goes out on COMMIT WORK.",
-      "code": "DATA(lo_send) = cl_bcs=>create_persistent( ).\n\" set_document, add_recipient, send( ), then COMMIT WORK"
+      "type": "FIORI",
+      "name": "/sap/bc/ui2/flp",
+      "desc": "The ICF path of the launchpad. If SICF shows it inactive, nobody gets a launchpad at all.",
+      "code": "https://<host>:<port>/sap/bc/ui2/flp?sap-client=100"
+    },
+    {
+      "type": "FIORI",
+      "name": "/sap/opu/odata/sap/",
+      "desc": "Where Gateway OData services live. Call the $metadata of a service here to check activation and authorization in one go.",
+      "code": "/sap/opu/odata/sap/ZBRW_DRIVER_SRV/$metadata"
+    },
+    {
+      "type": "FIORI",
+      "name": "sap-ui-debug=true",
+      "desc": "URL parameter that loads the readable UI5 sources, so the browser console shows real error text instead of minified noise. Slow; use it for one session only.",
+      "code": "/sap/bc/ui2/flp?sap-client=100&sap-ui-debug=true"
     }
   ]
 };

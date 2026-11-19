@@ -1,446 +1,432 @@
-/* Common SAP transaction codes, grouped by area. Shape: { generatedAt, items:[{ code, title, module, note? }] }
+/* Transaction codes for security, authorization and Fiori work, grouped by area. Shape: { generatedAt, items:[{ code, title, module, note? }] }
    Invented demo data for the SAP Knowledge Hub template. Edit freely. */
 window.CLAUDE_TCODES = {
-  "generatedAt": "2026-11-16",
+  "generatedAt": "2026-11-19",
   "items": [
-    {
-      "code": "SE38",
-      "title": "ABAP Editor",
-      "module": "Development",
-      "note": "run or edit a report"
-    },
-    {
-      "code": "SE80",
-      "title": "Object Navigator",
-      "module": "Development"
-    },
-    {
-      "code": "SE24",
-      "title": "Class Builder",
-      "module": "Development"
-    },
-    {
-      "code": "SE37",
-      "title": "Function Builder",
-      "module": "Development"
-    },
-    {
-      "code": "SE11",
-      "title": "ABAP Dictionary",
-      "module": "Development",
-      "note": "tables, structures, data elements"
-    },
-    {
-      "code": "SE16N",
-      "title": "General table display",
-      "module": "Development"
-    },
-    {
-      "code": "SE91",
-      "title": "Message maintenance",
-      "module": "Development"
-    },
-    {
-      "code": "SE93",
-      "title": "Maintain transaction codes",
-      "module": "Development",
-      "note": "look up what a T-code runs"
-    },
-    {
-      "code": "SE18",
-      "title": "BAdI definitions",
-      "module": "Development"
-    },
-    {
-      "code": "SE19",
-      "title": "BAdI implementations",
-      "module": "Development"
-    },
-    {
-      "code": "SMOD",
-      "title": "SAP enhancements (exits)",
-      "module": "Development"
-    },
-    {
-      "code": "CMOD",
-      "title": "Enhancement projects",
-      "module": "Development"
-    },
-    {
-      "code": "SM30",
-      "title": "Table maintenance",
-      "module": "Development"
-    },
-    {
-      "code": "SE54",
-      "title": "Generate table maintenance dialog",
-      "module": "Development"
-    },
-    {
-      "code": "SHDB",
-      "title": "Batch input recorder",
-      "module": "Development"
-    },
-    {
-      "code": "SAT",
-      "title": "Runtime analysis",
-      "module": "Development"
-    },
-    {
-      "code": "ST05",
-      "title": "SQL and buffer trace",
-      "module": "Development"
-    },
-    {
-      "code": "SCI",
-      "title": "Code Inspector",
-      "module": "Development"
-    },
-    {
-      "code": "SLIN",
-      "title": "Extended program check",
-      "module": "Development"
-    },
-    {
-      "code": "SLG1",
-      "title": "Application log display",
-      "module": "Development"
-    },
-    {
-      "code": "SNRO",
-      "title": "Number range objects",
-      "module": "Development"
-    },
-    {
-      "code": "SE09",
-      "title": "Transport Organizer",
-      "module": "Basis & transports"
-    },
-    {
-      "code": "SE10",
-      "title": "Transport Organizer (customizing view)",
-      "module": "Basis & transports"
-    },
-    {
-      "code": "STMS",
-      "title": "Transport Management System",
-      "module": "Basis & transports",
-      "note": "import queues per system"
-    },
-    {
-      "code": "SE03",
-      "title": "Transport Organizer tools",
-      "module": "Basis & transports"
-    },
-    {
-      "code": "SM37",
-      "title": "Job overview",
-      "module": "Basis & transports"
-    },
-    {
-      "code": "SM36",
-      "title": "Define background job",
-      "module": "Basis & transports"
-    },
-    {
-      "code": "ST22",
-      "title": "ABAP dump analysis",
-      "module": "Basis & transports",
-      "note": "start here when something crashed"
-    },
-    {
-      "code": "SM21",
-      "title": "System log",
-      "module": "Basis & transports"
-    },
-    {
-      "code": "SM12",
-      "title": "Lock entries",
-      "module": "Basis & transports"
-    },
-    {
-      "code": "SM13",
-      "title": "Update requests",
-      "module": "Basis & transports",
-      "note": "failed V1 updates land here"
-    },
-    {
-      "code": "SM50",
-      "title": "Work process overview",
-      "module": "Basis & transports"
-    },
-    {
-      "code": "SM66",
-      "title": "Global work process overview",
-      "module": "Basis & transports"
-    },
     {
       "code": "SU01",
       "title": "User maintenance",
-      "module": "Basis & transports"
+      "module": "Users & roles",
+      "note": "create, lock, reset password, assign roles"
     },
     {
-      "code": "SU53",
-      "title": "Last failed authorisation check",
-      "module": "Basis & transports"
+      "code": "SU01D",
+      "title": "Display users",
+      "module": "Users & roles",
+      "note": "read-only, safe to hand out"
+    },
+    {
+      "code": "SU10",
+      "title": "Mass user changes",
+      "module": "Users & roles",
+      "note": "lock, unlock or add roles for many users"
+    },
+    {
+      "code": "SU3",
+      "title": "Own user data",
+      "module": "Users & roles",
+      "note": "defaults, parameters, date format"
     },
     {
       "code": "PFCG",
       "title": "Role maintenance",
-      "module": "Basis & transports"
+      "module": "Users & roles",
+      "note": "menu, authorizations, users, profile generation"
+    },
+    {
+      "code": "PFUD",
+      "title": "User master comparison",
+      "module": "Users & roles",
+      "note": "for many roles at once"
+    },
+    {
+      "code": "SUGR",
+      "title": "User groups",
+      "module": "Users & roles",
+      "note": "groups for S_USER_GRP"
+    },
+    {
+      "code": "SUPC",
+      "title": "Mass profile generation",
+      "module": "Users & roles",
+      "note": "after a big SU24 change"
+    },
+    {
+      "code": "SU56",
+      "title": "User buffer",
+      "module": "Users & roles",
+      "note": "what the system thinks the user holds right now"
+    },
+    {
+      "code": "SU02",
+      "title": "Profiles (manual)",
+      "module": "Users & roles",
+      "note": "legacy; avoid new manual profiles"
+    },
+    {
+      "code": "SU53",
+      "title": "Last failed authorization check",
+      "module": "Authorization analysis",
+      "note": "first stop for \"no authorization\""
+    },
+    {
+      "code": "STAUTHTRACE",
+      "title": "Authorization trace",
+      "module": "Authorization analysis",
+      "note": "traces every check, across servers"
+    },
+    {
+      "code": "ST01",
+      "title": "System trace",
+      "module": "Authorization analysis",
+      "note": "authorization, RFC and kernel traces"
+    },
+    {
+      "code": "SUIM",
+      "title": "User information system",
+      "module": "Authorization analysis",
+      "note": "who has what, where used, change documents"
+    },
+    {
+      "code": "SU24",
+      "title": "Proposals and check indicators",
+      "module": "Authorization analysis",
+      "note": "default values PFCG proposes"
+    },
+    {
+      "code": "SU25",
+      "title": "Upgrade SU24 data",
+      "module": "Authorization analysis",
+      "note": "compare after an upgrade or support pack"
+    },
+    {
+      "code": "SU22",
+      "title": "SAP proposals (SAP data)",
+      "module": "Authorization analysis",
+      "note": "read it, maintain SU24 instead"
+    },
+    {
+      "code": "SU21",
+      "title": "Authorization objects",
+      "module": "Authorization analysis",
+      "note": "object classes, fields, documentation"
+    },
+    {
+      "code": "SU20",
+      "title": "Authorization fields",
+      "module": "Authorization analysis"
+    },
+    {
+      "code": "SACF",
+      "title": "Switchable authorization checks",
+      "module": "Authorization analysis",
+      "note": "checks SAP ships switched off"
+    },
+    {
+      "code": "RSAU_CONFIG",
+      "title": "Security audit log configuration",
+      "module": "Security & audit",
+      "note": "filters and settings"
+    },
+    {
+      "code": "RSAU_READ_LOG",
+      "title": "Read the security audit log",
+      "module": "Security & audit"
+    },
+    {
+      "code": "SM19",
+      "title": "Audit log configuration (older)",
+      "module": "Security & audit",
+      "note": "replaced by RSAU_CONFIG"
+    },
+    {
+      "code": "SM20",
+      "title": "Audit log analysis (older)",
+      "module": "Security & audit",
+      "note": "replaced by RSAU_READ_LOG"
+    },
+    {
+      "code": "SECPOL",
+      "title": "Security policies",
+      "module": "Security & audit",
+      "note": "password and logon rules per group of users"
+    },
+    {
+      "code": "RZ10",
+      "title": "Profile parameters",
+      "module": "Security & audit",
+      "note": "permanent, needs a restart for static ones"
+    },
+    {
+      "code": "RZ11",
+      "title": "Display or change a parameter",
+      "module": "Security & audit",
+      "note": "dynamic parameters take effect at once"
+    },
+    {
+      "code": "SM01_DEV",
+      "title": "Lock transactions (system-wide)",
+      "module": "Security & audit",
+      "note": "for everyone, in every client"
+    },
+    {
+      "code": "SM01_CUS",
+      "title": "Lock transactions (client)",
+      "module": "Security & audit",
+      "note": "client-specific lock"
+    },
+    {
+      "code": "SCC4",
+      "title": "Client settings",
+      "module": "Security & audit",
+      "note": "changes and transports allowed?"
+    },
+    {
+      "code": "SE06",
+      "title": "System change option",
+      "module": "Security & audit",
+      "note": "is the system open for repairs?"
+    },
+    {
+      "code": "/UI2/FLP",
+      "title": "Open the launchpad",
+      "module": "Fiori launchpad",
+      "note": "from the GUI, in the browser"
+    },
+    {
+      "code": "/UI2/FLPD_CUST",
+      "title": "Launchpad designer (client)",
+      "module": "Fiori launchpad",
+      "note": "catalogs and groups, this client"
+    },
+    {
+      "code": "/UI2/FLPD_CONF",
+      "title": "Launchpad designer (all clients)",
+      "module": "Fiori launchpad",
+      "note": "cross-client content"
+    },
+    {
+      "code": "/UI2/FLPCM_CUST",
+      "title": "Launchpad content manager (client)",
+      "module": "Fiori launchpad",
+      "note": "catalogs, tiles, target mappings"
+    },
+    {
+      "code": "/UI2/FLPCM_CONF",
+      "title": "Launchpad content manager (all clients)",
+      "module": "Fiori launchpad"
+    },
+    {
+      "code": "/UI2/FLIA",
+      "title": "Launchpad intent analysis",
+      "module": "Fiori launchpad",
+      "note": "why an intent does or does not resolve"
+    },
+    {
+      "code": "/UI2/FLC",
+      "title": "Launchpad checks",
+      "module": "Fiori launchpad",
+      "note": "consistency of catalogs and mappings"
+    },
+    {
+      "code": "/UI2/SEMOBJ",
+      "title": "Semantic objects",
+      "module": "Fiori launchpad",
+      "note": "the first half of every intent"
+    },
+    {
+      "code": "/UI2/INVALIDATE_CLIENT_CACHES",
+      "title": "Clear launchpad caches (client)",
+      "module": "Fiori launchpad",
+      "note": "report, run in SE38"
+    },
+    {
+      "code": "/UI2/INVALIDATE_GLOBAL_CACHES",
+      "title": "Clear launchpad caches (all clients)",
+      "module": "Fiori launchpad",
+      "note": "report, run in SE38"
+    },
+    {
+      "code": "/UI5/APP_INDEX_CALCULATE",
+      "title": "Recalculate the UI5 app index",
+      "module": "Fiori launchpad",
+      "note": "report, after deploying an app"
+    },
+    {
+      "code": "/IWFND/MAINT_SERVICE",
+      "title": "Activate and maintain services",
+      "module": "Gateway & OData",
+      "note": "also shows the ICF node"
+    },
+    {
+      "code": "/IWFND/ERROR_LOG",
+      "title": "Gateway error log (front end)",
+      "module": "Gateway & OData",
+      "note": "start here for a failing call"
+    },
+    {
+      "code": "/IWBEP/ERROR_LOG",
+      "title": "Gateway error log (back end)",
+      "module": "Gateway & OData",
+      "note": "the business error behind a 500"
+    },
+    {
+      "code": "/IWFND/GW_CLIENT",
+      "title": "Gateway client",
+      "module": "Gateway & OData",
+      "note": "replay a call as yourself"
+    },
+    {
+      "code": "/IWFND/TRACES",
+      "title": "Gateway traces",
+      "module": "Gateway & OData",
+      "note": "payloads and performance per user"
+    },
+    {
+      "code": "/IWFND/CACHE_CLEANUP",
+      "title": "Metadata cache (front end)",
+      "module": "Gateway & OData",
+      "note": "after a model change"
+    },
+    {
+      "code": "/IWBEP/CACHE_CLEANUP",
+      "title": "Metadata cache (back end)",
+      "module": "Gateway & OData"
+    },
+    {
+      "code": "SICF",
+      "title": "HTTP services (ICF)",
+      "module": "Gateway & OData",
+      "note": "activate nodes, logon settings"
     },
     {
       "code": "SM59",
       "title": "RFC destinations",
-      "module": "Basis & transports"
+      "module": "Connectivity & certificates",
+      "note": "connection and authorization tests"
     },
     {
-      "code": "AL11",
-      "title": "Application server directories",
-      "module": "Basis & transports"
+      "code": "SMT1",
+      "title": "Trusted-trusting systems",
+      "module": "Connectivity & certificates",
+      "note": "set up trusted RFC"
     },
     {
-      "code": "SPRO",
-      "title": "Customizing (IMG)",
-      "module": "Basis & transports"
+      "code": "STRUST",
+      "title": "Trust manager",
+      "module": "Connectivity & certificates",
+      "note": "certificates and PSEs, check expiry dates"
     },
     {
-      "code": "WE02",
-      "title": "IDoc list",
-      "module": "Interfaces & IDocs"
+      "code": "SAML2",
+      "title": "SAML 2.0 configuration",
+      "module": "Connectivity & certificates",
+      "note": "single sign-on in the browser"
     },
     {
-      "code": "WE05",
-      "title": "IDoc list (all)",
-      "module": "Interfaces & IDocs"
+      "code": "SNC0",
+      "title": "SNC access control list",
+      "module": "Connectivity & certificates",
+      "note": "which systems may connect with SNC"
     },
     {
-      "code": "WE19",
-      "title": "IDoc test tool",
-      "module": "Interfaces & IDocs",
-      "note": "copy an IDoc and replay it"
+      "code": "SMICM",
+      "title": "ICM monitor",
+      "module": "Connectivity & certificates",
+      "note": "HTTP ports, certificates in use, traces"
     },
     {
-      "code": "WE20",
-      "title": "Partner profiles",
-      "module": "Interfaces & IDocs"
+      "code": "SOAMANAGER",
+      "title": "Web service configuration",
+      "module": "Connectivity & certificates"
     },
     {
-      "code": "WE21",
-      "title": "Ports",
-      "module": "Interfaces & IDocs"
+      "code": "AL08",
+      "title": "Users logged on (all servers)",
+      "module": "Basis & monitoring"
     },
     {
-      "code": "WE30",
-      "title": "IDoc type development",
-      "module": "Interfaces & IDocs"
+      "code": "SM04",
+      "title": "User sessions (this server)",
+      "module": "Basis & monitoring"
     },
     {
-      "code": "WE60",
-      "title": "IDoc documentation",
-      "module": "Interfaces & IDocs"
+      "code": "SM21",
+      "title": "System log",
+      "module": "Basis & monitoring"
     },
     {
-      "code": "BD87",
-      "title": "Reprocess IDocs",
-      "module": "Interfaces & IDocs",
-      "note": "status 51 and 64"
+      "code": "ST22",
+      "title": "Short dumps",
+      "module": "Basis & monitoring",
+      "note": "incl. dumps from failed checks in code"
     },
     {
-      "code": "SICF",
-      "title": "HTTP service tree",
-      "module": "Interfaces & IDocs"
+      "code": "SM12",
+      "title": "Lock entries",
+      "module": "Basis & monitoring",
+      "note": "locked roles in PFCG show here"
     },
     {
-      "code": "SEGW",
-      "title": "Gateway service builder",
-      "module": "Interfaces & IDocs"
+      "code": "SM37",
+      "title": "Job overview",
+      "module": "Basis & monitoring",
+      "note": "is PFCG_TIME_DEPENDENCY running?"
     },
     {
-      "code": "/IWFND/MAINT_SERVICE",
-      "title": "Activate OData services",
-      "module": "Interfaces & IDocs"
+      "code": "SM36",
+      "title": "Schedule a job",
+      "module": "Basis & monitoring"
     },
     {
-      "code": "/IWFND/ERROR_LOG",
-      "title": "Gateway error log",
-      "module": "Interfaces & IDocs"
+      "code": "SLG1",
+      "title": "Application log",
+      "module": "Basis & monitoring"
     },
     {
-      "code": "VA01",
-      "title": "Create sales order",
-      "module": "Sales & distribution"
+      "code": "STMS",
+      "title": "Transport management",
+      "module": "Basis & monitoring",
+      "note": "role transports to QA and production"
     },
     {
-      "code": "VA02",
-      "title": "Change sales order",
-      "module": "Sales & distribution"
+      "code": "SE01",
+      "title": "Transport organizer (extended)",
+      "module": "Basis & monitoring"
     },
     {
-      "code": "VA03",
-      "title": "Display sales order",
-      "module": "Sales & distribution"
+      "code": "SE16N",
+      "title": "Table display",
+      "module": "Development (still handy)",
+      "note": "AGR_USERS, AGR_1251, USR02"
     },
     {
-      "code": "VA05",
-      "title": "List of sales orders",
-      "module": "Sales & distribution"
+      "code": "SE11",
+      "title": "Data dictionary",
+      "module": "Development (still handy)"
     },
     {
-      "code": "VL01N",
-      "title": "Create outbound delivery",
-      "module": "Sales & distribution"
+      "code": "SE38",
+      "title": "ABAP editor",
+      "module": "Development (still handy)",
+      "note": "run RSUSR reports here"
     },
     {
-      "code": "VL02N",
-      "title": "Change outbound delivery",
-      "module": "Sales & distribution"
+      "code": "SE80",
+      "title": "Object navigator",
+      "module": "Development (still handy)",
+      "note": "UI5 apps in the BSP repository"
     },
     {
-      "code": "VF01",
-      "title": "Create billing document",
-      "module": "Sales & distribution"
+      "code": "SE93",
+      "title": "Transactions",
+      "module": "Development (still handy)",
+      "note": "which object a transaction checks at start"
     },
     {
-      "code": "VF03",
-      "title": "Display billing document",
-      "module": "Sales & distribution"
-    },
-    {
-      "code": "VK11",
-      "title": "Create condition records",
-      "module": "Sales & distribution"
-    },
-    {
-      "code": "BP",
-      "title": "Business partner",
-      "module": "Sales & distribution",
-      "note": "customers and vendors in S/4HANA"
-    },
-    {
-      "code": "ME21N",
-      "title": "Create purchase order",
-      "module": "Materials management"
-    },
-    {
-      "code": "ME22N",
-      "title": "Change purchase order",
-      "module": "Materials management"
-    },
-    {
-      "code": "ME23N",
-      "title": "Display purchase order",
-      "module": "Materials management"
-    },
-    {
-      "code": "ME2N",
-      "title": "POs by number",
-      "module": "Materials management"
-    },
-    {
-      "code": "ME51N",
-      "title": "Create purchase requisition",
-      "module": "Materials management"
-    },
-    {
-      "code": "MIGO",
-      "title": "Goods movement",
-      "module": "Materials management"
-    },
-    {
-      "code": "MIRO",
-      "title": "Enter incoming invoice",
-      "module": "Materials management"
-    },
-    {
-      "code": "MB51",
-      "title": "Material document list",
-      "module": "Materials management"
-    },
-    {
-      "code": "MB52",
-      "title": "Warehouse stocks",
-      "module": "Materials management"
-    },
-    {
-      "code": "MMBE",
-      "title": "Stock overview",
-      "module": "Materials management"
-    },
-    {
-      "code": "MM03",
-      "title": "Display material",
-      "module": "Materials management"
-    },
-    {
-      "code": "FB03",
-      "title": "Display FI document",
-      "module": "Finance"
-    },
-    {
-      "code": "FB50",
-      "title": "Enter G/L account document",
-      "module": "Finance"
-    },
-    {
-      "code": "FB60",
-      "title": "Enter vendor invoice",
-      "module": "Finance"
-    },
-    {
-      "code": "FB70",
-      "title": "Enter customer invoice",
-      "module": "Finance"
-    },
-    {
-      "code": "F110",
-      "title": "Automatic payment run",
-      "module": "Finance"
-    },
-    {
-      "code": "FBL1N",
-      "title": "Vendor line items",
-      "module": "Finance"
-    },
-    {
-      "code": "FBL3N",
-      "title": "G/L line items",
-      "module": "Finance"
-    },
-    {
-      "code": "FBL5N",
-      "title": "Customer line items",
-      "module": "Finance"
-    },
-    {
-      "code": "FS00",
-      "title": "G/L account master",
-      "module": "Finance"
-    },
-    {
-      "code": "IW21",
-      "title": "Create notification",
-      "module": "Plant maintenance"
-    },
-    {
-      "code": "IW31",
-      "title": "Create maintenance order",
-      "module": "Plant maintenance"
-    },
-    {
-      "code": "IW38",
-      "title": "Change orders (list)",
-      "module": "Plant maintenance"
-    },
-    {
-      "code": "IE03",
-      "title": "Display equipment",
-      "module": "Plant maintenance"
-    },
-    {
-      "code": "IL03",
-      "title": "Display functional location",
-      "module": "Plant maintenance"
+      "code": "SE37",
+      "title": "Function builder",
+      "module": "Development (still handy)"
     }
   ]
 };

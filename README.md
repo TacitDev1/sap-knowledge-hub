@@ -1,12 +1,12 @@
 # SAP Knowledge Hub
 
-An offline, zero-dependency workbench for SAP developers and consultants. It opens from a folder with a double-click: no server, no build step, no install, no network calls.
+An offline, zero-dependency workbench for SAP technical consultants working on authorizations, security and Fiori. It opens from a folder with a double-click: no server, no build step, no install, no network calls.
 
 > **No customer data is saved in this SAP Knowledge Hub. Nothing is stored, and everything is always expunged.** See [Privacy](#privacy).
 
-> **Sanitised template.** This is a public template of a tool I use day to day. All data in it is invented: the consultancy *Larkwell Consulting*, the clients *Brackenfield Waste* and *Osterby Utilities*, the systems BD1/BQ1/BP1, the tickets, the people and the timesheet. Any resemblance to real companies, people or tickets is coincidental. The SAP objects and transaction codes are standard, publicly documented SAP names; the explanations are written in my own words.
+> **Sanitised template.** This is a public template of a tool I use day to day. All data in it is invented: the consultancy *Larkwell Consulting*, the clients *Brackenfield Waste* and *Osterby Utilities*, the systems BD1/BQ1/BP1, the tickets and the people. Any resemblance to real companies, people or tickets is coincidental. The SAP objects and transaction codes are standard, publicly documented SAP names; the explanations are written in my own words.
 
-**Live demo:** [tacitdev1.github.io/sap-knowledge-hub](https://tacitdev1.github.io/sap-knowledge-hub/). Try [Search for "commit"](https://tacitdev1.github.io/sap-knowledge-hub/#search?q=commit), then open the [Second Brain graph](https://tacitdev1.github.io/sap-knowledge-hub/#wiki) and click a node.
+**Live demo:** [tacitdev1.github.io/sap-knowledge-hub](https://tacitdev1.github.io/sap-knowledge-hub/). Try [Search for "S_SERVICE"](https://tacitdev1.github.io/sap-knowledge-hub/#search?q=S_SERVICE), then open the [Second Brain graph](https://tacitdev1.github.io/sap-knowledge-hub/#wiki) and click a node.
 
 **Code:** [github.com/TacitDev1/sap-knowledge-hub](https://github.com/TacitDev1/sap-knowledge-hub)
 
@@ -14,20 +14,19 @@ An offline, zero-dependency workbench for SAP developers and consultants. It ope
 
 ## What it does
 
-Eleven views in one page:
+Ten views in one page:
 
 | View | What it is |
 |---|---|
 | Dashboard | Counts, workspaces, recently changed wiki pages and inbox items |
-| Code Builder | ABAP editor with syntax colouring and ready-made templates (SALV, BAPI + commit, guarded update report) |
+| Code Builder | Editor with syntax colouring and templates for AUTHORITY-CHECKs, CDS access controls and quick role reports |
 | From Claude | An inbox for code and walkthroughs handed over from an AI chat session |
 | Snippets | Your own reusable code blocks, editable in the page |
-| Reference | A notebook of function modules, BAPIs, BAdIs and classes, plus a researched list you can copy into it |
-| Cheat Sheet | Click-to-copy ABAP patterns |
-| T-Codes | A searchable list of common transaction codes, grouped by area |
+| Reference | A notebook of authorization objects, role and user tables, user FMs, reports and Fiori paths, plus a researched list you can copy into it |
+| Cheat Sheet | Click-to-copy troubleshooting steps: missing authorizations, launchpad tiles, OData errors, locked users |
+| T-Codes | Security, authorization, Fiori and Gateway transaction codes, grouped by area |
 | Second Brain | A Markdown wiki with `[[links]]`, backlinks and a force-directed link graph |
 | My Tickets | An offline mirror of assigned service-desk tickets with comment threads |
-| Timesheet | A working week rebuilt from tickets; you only type the hours |
 | Search | One box across the wiki, tickets, T-codes, inbox, references and snippets |
 
 | Second Brain graph | Search |
@@ -40,10 +39,10 @@ Eleven views in one page:
 flowchart LR
   subgraph repo["Static files (this repo)"]
     MD["wiki/**/*.md"] -- "node build-wiki.js" --> WJS["data/wiki.js"]
-    D["data/inbox.js · refs.js · tcodes.js<br/>tickets.js · comments.js · timesheet.js"]
+    D["data/inbox.js · refs.js · tcodes.js<br/>tickets.js · comments.js"]
   end
   subgraph browser["Browser"]
-    G["window.CLAUDE_* globals"] --> APP["js/hub.js<br/>render 11 views"]
+    G["window.CLAUDE_* globals"] --> APP["js/hub.js<br/>render 10 views"]
     APP <--> MEM[("in-memory state<br/>gone on close or reload")]
   end
   WJS -- "&lt;script&gt;" --> G
@@ -52,7 +51,7 @@ flowchart LR
 ```
 
 - **Data as script tags.** Each data file sets one global (`window.CLAUDE_REFS = {...}`). Browsers load `<script src>` from `file://` without complaint, while `fetch()` of JSON would be blocked. That one choice is why the hub runs from a folder with no server.
-- **Read-only data, throwaway edits.** The data files are the "published" content. Anything you create in the page (snippets, notebook entries, the editor buffer, timesheet hours) lives in JavaScript variables only and is gone when you close or reload the tab.
+- **Read-only data, throwaway edits.** The data files are the "published" content. Anything you create in the page (snippets, notebook entries, the editor buffer) lives in JavaScript variables only and is gone when you close or reload the tab.
 - **No dependencies.** Plain HTML, CSS and one script. The wiki graph is a hand-written force simulation in SVG; the Markdown renderer is about 40 lines.
 - **Relative paths only**, so the same files work from disk, from `localhost` and from a GitHub Pages sub-path.
 - The `CLAUDE_*` names come from the original workflow, where an AI assistant refreshes the data files each morning. They are just global names; nothing here calls an AI service.
@@ -75,12 +74,11 @@ then open `http://localhost:5178/sap-knowledge-hub/`. Any view can be opened dir
 
 | File | Global | Shape |
 |---|---|---|
-| `data/refs.js` | `CLAUDE_REFS` | `{ generatedAt, items: [{ type: "FM"\|"BAPI"\|"BADI"\|"CLASS", name, desc, code }] }` |
+| `data/refs.js` | `CLAUDE_REFS` | `{ generatedAt, items: [{ type: "AUTH"\|"TABLE"\|"FM"\|"REPORT"\|"FIORI", name, desc, code }] }` |
 | `data/tcodes.js` | `CLAUDE_TCODES` | `{ generatedAt, items: [{ code, title, module, note? }] }` |
 | `data/inbox.js` | `CLAUDE_INBOX` | `{ generatedAt, items: [{ title, note, code }] }` |
 | `data/tickets.js` | `CLAUDE_TICKETS` | `{ generatedAt, items: [{ key, url?, status, type, priority, project, updated, summary, note? }] }` |
 | `data/comments.js` | `CLAUDE_COMMENTS` | `{ generatedAt, threads: { "KEY-1": [{ a: author, d: date, t: text }] } }` |
-| `data/timesheet.js` | `CLAUDE_TIMESHEET` | `{ generatedAt, secondClient, weeks: [{ label, days: [{ dow, date, note?, entries: [{ id, ref, refUrl, client, source, title, what }] }] }] }` |
 | `data/wiki.js` | `CLAUDE_WIKI` | generated, see below |
 
 Edit any data file by hand (it is plain JavaScript) and reload the page.
@@ -106,7 +104,7 @@ Links become edges in the graph, and every page gets a "Linked from" list automa
 ## Repository layout
 
 ```
-index.html            the app shell (11 views)
+index.html            the app shell (10 views)
 css/hub.css           the theme
 js/hub.js             all behaviour
 data/*.js             content, loaded as globals
@@ -132,7 +130,7 @@ No customer data is saved in this SAP Knowledge Hub. Nothing is stored, and ever
 What it does:
 
 - Reads its own files (`index.html`, `css/`, `js/`, `data/`) from the same place the page came from, and nothing else.
-- Keeps anything you type (code, snippets, notebook entries, timesheet hours) in memory while the tab is open. Closing or reloading the tab wipes it.
+- Keeps anything you type (code, snippets, notebook entries) in memory while the tab is open. Closing or reloading the tab wipes it.
 - On load, deletes the `sapKnowledgeHub.*` and `abapHub.*` keys that earlier versions of the hub left in the browser. It does not touch any other keys.
 
 What it does not do:

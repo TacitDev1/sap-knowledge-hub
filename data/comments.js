@@ -1,59 +1,74 @@
 /* Ticket comment threads, keyed by ticket key. Shape: { generatedAt, threads:{ KEY:[{ a: author, d: date, t: text }] } }
    Invented demo data for the SAP Knowledge Hub template. Edit freely. */
 window.CLAUDE_COMMENTS = {
-  "generatedAt": "2026-11-16",
+  "generatedAt": "2026-11-19",
   "threads": {
     "BRW-112": [
       {
         "a": "Jonas",
-        "d": "2026-11-09",
-        "t": "Attached the first route file. About 400 orders, one row per bin."
+        "d": "2026-11-16",
+        "t": "Since the weekend the dispatch team opens the launchpad and sees nothing. Not even the search works for them."
       },
       {
         "a": "Mara",
-        "d": "2026-11-11",
-        "t": "Test run in BQ1 created nothing: every order came back with \"sold-to party not maintained\". The upload sent SP/SH as partner roles; the BAPI wants the internal codes AG/WE. Fixed."
+        "d": "2026-11-17",
+        "t": "The upgrade switched the launchpad to spaces and pages. Their role still has the catalogs, so the apps are allowed, but there is no space to show them on. Building one space per business role now."
       },
       {
         "a": "Mara",
-        "d": "2026-11-13",
-        "t": "Second test run clean, 398 of 400 orders. The two failures are customers blocked for sales, which is correct. Waiting on the final file."
+        "d": "2026-11-18",
+        "t": "Dispatch, weighbridge and depot clerk roles have spaces in BQ1. Jonas, can two of your team test there tomorrow morning?"
       }
     ],
-    "BRW-124": [
+    "BRW-118": [
       {
-        "a": "Priya",
-        "d": "2026-11-16",
-        "t": "Around 120 ORDERS IDocs in status 51 since Saturday. The new route system went live Friday evening."
+        "a": "Lena",
+        "d": "2026-11-14",
+        "t": "Clerks at the new Harrow Lane depot cannot post goods receipts. The other depots are fine."
       },
       {
         "a": "Mara",
-        "d": "2026-11-16",
-        "t": "WE20 for the new sender still uses the old inbound process code. Corrected in BQ1 and replayed three IDocs with WE19: all posted. Will raise the change for BP1 and then mass-reprocess with BD87."
+        "d": "2026-11-15",
+        "t": "SU53 for one of the clerks: M_MSEG_WWA with plant 2300 failed. Their role covers plants 2100 and 2200 only. Easy to add, but it is a decision for the business: is Harrow Lane part of the same team?"
+      },
+      {
+        "a": "Jonas",
+        "d": "2026-11-17",
+        "t": "Checking with the depot manager. Back to you on Thursday."
       }
     ],
     "OSU-207": [
       {
-        "a": "Tobias",
-        "d": "2026-11-06",
-        "t": "Finance wants hard stops, not warnings, for ZNB orders without a cost centre."
+        "a": "Sipho",
+        "d": "2026-11-11",
+        "t": "About 40 meter readers locked out since this morning. All of them on the field tablets."
       },
       {
         "a": "Mara",
-        "d": "2026-11-12",
-        "t": "Done in ME_PROCESS_PO_CUST~CHECK with CH_FAILED. BAPI_PO_CREATE1 goes through the same BAdI, so interface-created POs are covered too."
+        "d": "2026-11-11",
+        "t": "Unlocked them with SU10. RSUSR006 shows five failed logons each within a minute of the first sync. The tablets keep the old password and retry it in the background."
       },
       {
-        "a": "Tobias",
+        "a": "Ravi",
+        "d": "2026-11-12",
+        "t": "Device team will push a profile that clears the stored credentials. Rolling out depot by depot."
+      },
+      {
+        "a": "Mara",
         "d": "2026-11-13",
-        "t": "Tested in BD1 with the three scenarios from the spec. Happy for BQ1."
+        "t": "No new locks this morning after the first two depots. Leaving the morning RSUSR006 check in place until all tablets are done."
       }
     ],
     "OSU-212": [
       {
+        "a": "Anouk",
+        "d": "2026-11-14",
+        "t": "The nightly extract from the reporting system stopped on Wednesday with \"no RFC authorization\"."
+      },
+      {
         "a": "Mara",
-        "d": "2026-11-11",
-        "t": "No custom code in the payment run path for this company code. The skipped vendors all have bank details added this month."
+        "d": "2026-11-16",
+        "t": "The trust itself is fine: SMT1 still lists the reporting system. The extract user lost S_RFCACL when its role was cleaned up last week. Change is in a transport; needs your approval before it goes to BP1."
       }
     ]
   }

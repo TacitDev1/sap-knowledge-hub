@@ -14,38 +14,83 @@
     } catch(e){ /* storage blocked or unavailable: nothing to delete */ }
   });
 })();
-const MEM = { code: "", hours: {} };
-const DB = { snips: null, refs: null };
-if (!DB.snips) DB.snips = [
-  { id:1, name:"ALV grid (simple)", note:"SALV factory",
-    code:"cl_salv_table=>factory(\n  IMPORTING r_salv_table = DATA(go_alv)\n  CHANGING  t_table      = lt_data ).\ngo_alv->display( )." },
-  { id:2, name:"BAPI return check + commit", note:"BAPIRET2, commit or roll back",
-    code:"LOOP AT lt_return TRANSPORTING NO FIELDS WHERE type CA 'EA'.\n  EXIT.\nENDLOOP.\nIF sy-subrc = 0.\n  CALL FUNCTION 'BAPI_TRANSACTION_ROLLBACK'.\nELSE.\n  CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'\n    EXPORTING wait = abap_true.\nENDIF." },
-  { id:3, name:"FOR ALL ENTRIES (with the empty-table guard)", note:"open SQL, avoid SELECT in LOOP",
-    code:"IF lt_orders IS NOT INITIAL.\n  SELECT vbeln, posnr, matnr, kwmeng\n    FROM vbap\n    FOR ALL ENTRIES IN @lt_orders\n    WHERE vbeln = @lt_orders-vbeln\n    INTO TABLE @DATA(lt_items).\nENDIF." },
-  { id:4, name:"Leading zeros in and out", note:"ALPHA conversion, inline",
-    code:"DATA(lv_kunnr) = |{ lv_input ALPHA = IN }|.    \" 4711 -> 0000004711\nDATA(lv_show)  = |{ lv_kunnr ALPHA = OUT }|.   \" and back for display" },
-  { id:5, name:"Group and total with REDUCE", note:"7.40+ expressions",
-    code:"DATA(lv_total) = REDUCE netwr( INIT s = CONV netwr( 0 )\n                             FOR ls IN lt_items\n                             WHERE ( werks = '1000' )\n                             NEXT s = s + ls-netwr )." },
-  { id:6, name:"Application log in four calls", note:"BAL, shows in SLG1",
-    code:"DATA(ls_log) = VALUE bal_s_log( object = 'ZHUB' subobject = 'RUN' extnumber = sy-repid ).\nCALL FUNCTION 'BAL_LOG_CREATE'\n  EXPORTING i_s_log      = ls_log\n  IMPORTING e_log_handle = lv_handle.\nCALL FUNCTION 'BAL_LOG_MSG_ADD_FREE_TEXT'\n  EXPORTING i_log_handle = lv_handle\n            i_msgty      = 'I'\n            i_text       = 'Run finished'.\nCALL FUNCTION 'BAL_DB_SAVE'\n  EXPORTING i_save_all = abap_true." }
+const MEM = { code: "" };
+/* Seed content for the session. Edits change these arrays only, never the browser. */
+const DB = {};
+DB.snips = [
+  {
+    "id": 1,
+    "name": "AUTHORITY-CHECK with a clear message",
+    "note": "plant check before a posting",
+    "code": "AUTHORITY-CHECK OBJECT 'M_MSEG_WWA'\n  ID 'ACTVT' FIELD '01'\n  ID 'WERKS' FIELD lv_plant.\nIF sy-subrc <> 0.\n  MESSAGE |No authorization to post goods movements in plant { lv_plant }| TYPE 'E'.\nENDIF."
+  },
+  {
+    "id": 2,
+    "name": "CDS access control on company code",
+    "note": "DCL, pfcg_auth",
+    "code": "@EndUserText.label: 'Company code access'\n@MappingRole: true\ndefine role ZI_INVOICE_DCL {\n  grant select on ZI_Invoice\n    where ( CompanyCode ) = aspect pfcg_auth( F_BKPF_BUK, BUKRS, ACTVT = '03' );\n}"
+  },
+  {
+    "id": 3,
+    "name": "Missing authorization: triage order",
+    "note": "SU53, trace, SU24, PFCG",
+    "code": "1. SU53 (or SU53 -> other user): which object, which value?\n2. Not clear? STAUTHTRACE for the user, reproduce, evaluate\n3. Value should come by default? Fix it in SU24, not in the role\n4. PFCG: expert mode, merge new data, generate\n5. User comparison, then retest. SU56 shows what the user holds now"
+  },
+  {
+    "id": 4,
+    "name": "Fiori tile missing: five checks",
+    "note": "launchpad, catalog, target mapping",
+    "code": "1. Spaces mode or classic groups?\n2. Catalog and space in the role menu (PFCG)\n3. /UI2/FLIA: does the intent resolve for this user?\n4. OData service active and S_SERVICE in a role\n5. /UI2/INVALIDATE_CLIENT_CACHES, then browser cache"
+  },
+  {
+    "id": 5,
+    "name": "A user's active roles",
+    "note": "AGR_USERS with validity",
+    "code": "SELECT agr_name, from_dat, to_dat\n  FROM agr_users\n  WHERE uname    = @lv_user\n    AND from_dat <= @sy-datum\n    AND to_dat   >= @sy-datum\n  ORDER BY agr_name\n  INTO TABLE @DATA(lt_roles)."
+  },
+  {
+    "id": 6,
+    "name": "Locked users and why",
+    "note": "USR02-UFLAG",
+    "code": "SELECT bname, uflag, trdat\n  FROM usr02\n  WHERE uflag <> 0\n  INTO TABLE @DATA(lt_locked).\n\" 32 = global lock (CUA), 64 = admin lock, 128 = failed logons"
+  }
 ];
-if (!DB.refs) DB.refs = [
-  { id:1, type:"BAPI", name:"BAPI_USER_GET_DETAIL",
-    desc:"Read full details of an SAP user (roles, address, etc.).",
-    code:"CALL FUNCTION 'BAPI_USER_GET_DETAIL'\n  EXPORTING username = lv_user\n  IMPORTING address  = ls_address\n  TABLES    return   = lt_return." },
-  { id:2, type:"FM", name:"CONVERSION_EXIT_ALPHA_INPUT",
-    desc:"Adds leading zeros to a number/ID (e.g. customer no.) so it matches the DB format.",
-    code:"CALL FUNCTION 'CONVERSION_EXIT_ALPHA_INPUT'\n  EXPORTING input  = lv_in\n  IMPORTING output = lv_out." },
-  { id:3, type:"FM", name:"POPUP_TO_CONFIRM",
-    desc:"Standard yes/no dialog. ANSWER comes back as '1' (first button), '2' (second) or 'A' (cancelled).",
-    code:"CALL FUNCTION 'POPUP_TO_CONFIRM'\n  EXPORTING titlebar      = 'Confirm update'\n            text_question = 'Update the selected rows?'\n  IMPORTING answer        = lv_answer." },
-  { id:4, type:"BAPI", name:"BAPI_TRANSACTION_COMMIT",
-    desc:"Commits the work a BAPI has queued. Nothing is saved until this runs. Use WAIT so the update task has finished before you read back.",
-    code:"CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'\n  EXPORTING wait = abap_true." },
-  { id:5, type:"CLASS", name:"CL_SALV_TABLE",
-    desc:"The quick way to show an internal table as an ALV grid. Display only.",
-    code:"cl_salv_table=>factory(\n  IMPORTING r_salv_table = DATA(lo_alv)\n  CHANGING  t_table      = lt_output ).\nlo_alv->display( )." }
+DB.refs = [
+  {
+    "id": 1,
+    "type": "AUTH",
+    "name": "S_TABU_DIS",
+    "desc": "Table access by authorization group (SE16, SM30). Broad: one group can hold hundreds of tables. Prefer S_TABU_NAM for single tables.",
+    "code": "S_TABU_DIS\n  DICBERCLS = <authorization group>\n  ACTVT     = 03"
+  },
+  {
+    "id": 2,
+    "type": "AUTH",
+    "name": "S_USER_GRP",
+    "desc": "Who may maintain users in which user group. Split admin rights by group so a helpdesk can reset passwords without touching admin users.",
+    "code": "S_USER_GRP\n  CLASS = HELPDESK\n  ACTVT = 03, 05 (lock/unlock), 02"
+  },
+  {
+    "id": 3,
+    "type": "TABLE",
+    "name": "AGR_TCODES",
+    "desc": "Transactions in a role menu. Not the same as authorization: a menu entry without S_TCODE still fails, and S_TCODE without a menu entry still works.",
+    "code": "SE16N -> AGR_TCODES\n  AGR_NAME = Z_BRW_*"
+  },
+  {
+    "id": 4,
+    "type": "FM",
+    "name": "BAPI_USER_GET_DETAIL",
+    "desc": "Reads a user: logon data, address, roles, profiles, lock state. Read-only, safe for reports.",
+    "code": "CALL FUNCTION 'BAPI_USER_GET_DETAIL'\n  EXPORTING username       = lv_user\n  IMPORTING islocked       = ls_lock\n  TABLES    activitygroups = lt_roles\n            return         = lt_return."
+  },
+  {
+    "id": 5,
+    "type": "REPORT",
+    "name": "RSUSR200",
+    "desc": "Users by last logon and password change. The quick way to find accounts nobody has used for months.",
+    "code": "SUIM -> User -> By Logon Date and Password Change\n  (or SE38 -> RSUSR200)"
+  }
 ];
 /* Keeps the editor buffer in memory only. Snippets and references already live in DB. */
 function save(){
@@ -57,8 +102,6 @@ function go(v){
   document.querySelectorAll(".view").forEach(x => x.classList.remove("active"));
   document.getElementById("view-" + v).classList.add("active");
   document.querySelectorAll(".nav button").forEach(b => b.classList.toggle("active", b.dataset.view === v));
-  /* the timesheet reveals on scroll; re-arm it once the view is actually visible */
-  if (v === "timesheet" && typeof tsReveal === "function") tsReveal();
   /* keep the view in the URL so a link can open the hub on a given view (#wiki, #search, ...) */
   try { history.replaceState(null, "", "#" + v); } catch(e){}
 }
@@ -90,7 +133,7 @@ function copyCode(el){ const p = el.closest(".card").querySelector("pre"); if (p
 function copyName(el){ const h = el.closest(".card").querySelector("h3"); if (h) copy(h.textContent.trim()); }
 
 /* ---------- syntax highlight (single-pass tokenizer) ---------- */
-const KW = ("abap_true abap_false add and append assign assigning at begin between by call case catch changing check class clear close collect commit concatenate condense constants continue convert corresponding create data delete describe display do else elseif end endcase endclass enddo endform endfunction endif endloop endmethod endmodule endselect endtry endwhile exit exporting fetch field-symbols for form free from function if implementation import importing in include initial initialization inner insert interface into is join leave left like load local loop me method methods modify module move new not of on or others outer parameters perform private protected public raise raising read receiving ref refresh reject report return returning rollback select select-options set single sort split structure sum table tables then time to translate try type types up update using value when where while with work write").split(/\s+/);
+const KW = ("abap_true abap_false add and append assign assigning at begin between by call case catch changing check class clear close collect commit concatenate condense constants continue convert corresponding create data delete describe display do else elseif end endcase endclass enddo endform endfunction endif endloop endmethod endmodule endselect endtry endwhile exit exporting fetch field-symbols for form free from function if implementation import importing in include initial initialization inner insert interface into is join leave left like load local loop me method methods modify module move new not of on or others outer parameters perform private protected public raise raising read receiving ref refresh reject report return returning rollback select select-options set single sort split structure sum table tables then time to translate try type types up update using value when where while with work write authority-check object id field dummy define role grant aspect pfcg_auth inheriting").split(/\s+/);
 const KWSET = new Set(KW);
 function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 function hl(){
@@ -130,16 +173,23 @@ function copyEditor(){ const v = document.getElementById("code").value; if (!v.t
 
 /* ---------- templates ---------- */
 const TPL = {
-  report: "REPORT zmy_report.\n\nDATA: lt_data TYPE TABLE OF kna1,\n      ls_data TYPE kna1.\n\nSTART-OF-SELECTION.\n  SELECT * FROM kna1 INTO TABLE lt_data UP TO 50 ROWS.\n  LOOP AT lt_data INTO ls_data.\n    WRITE: / ls_data-kunnr, ls_data-name1.\n  ENDLOOP.",
-  select: "SELECT field1 field2\n  FROM ztable\n  INTO TABLE @DATA(lt_result)\n  WHERE field1 = @lv_value.\n\nIF sy-subrc = 0.\n  \" found rows\nENDIF.",
-  loop:   "LOOP AT lt_itab INTO DATA(ls_row).\n  \" do something with ls_row\nENDLOOP.",
-  fmcall: "CALL FUNCTION 'FUNCTION_NAME'\n  EXPORTING\n    input  = lv_in\n  IMPORTING\n    output = lv_out\n  TABLES\n    t_data = lt_data\n  EXCEPTIONS\n    error  = 1\n    OTHERS = 2.\nIF sy-subrc <> 0.\n  \" handle error\nENDIF.",
-  class:  "CLASS lcl_demo DEFINITION.\n  PUBLIC SECTION.\n    METHODS run.\nENDCLASS.\n\nCLASS lcl_demo IMPLEMENTATION.\n  METHOD run.\n    \" logic here\n  ENDMETHOD.\nENDCLASS.",
-  try:    "TRY.\n    \" risky code\n  CATCH cx_root INTO DATA(lx_err).\n    MESSAGE lx_err->get_text( ) TYPE 'I'.\nENDTRY.",
-  selopt: "SELECT-OPTIONS: s_field FOR ztable-field.\nPARAMETERS:     p_test AS CHECKBOX DEFAULT 'X'.\n\nINITIALIZATION.\n  s_field-sign = 'I'. s_field-option = 'EQ'. s_field-low = 'X'. APPEND s_field.",
-  salv:   "TRY.\n    cl_salv_table=>factory(\n      IMPORTING r_salv_table = DATA(lo_alv)\n      CHANGING  t_table      = lt_output ).\n    lo_alv->get_functions( )->set_all( abap_true ).\n    lo_alv->get_columns( )->set_optimize( abap_true ).\n    lo_alv->display( ).\n  CATCH cx_salv_msg INTO DATA(lx).\n    MESSAGE lx->get_text( ) TYPE 'I'.\nENDTRY.",
-  commit: "CALL FUNCTION 'BAPI_SOMETHING'\n  TABLES return = lt_return.\n\nREAD TABLE lt_return WITH KEY type = 'E' TRANSPORTING NO FIELDS.\nIF sy-subrc <> 0.\n  CALL FUNCTION 'BAPI_TRANSACTION_COMMIT' EXPORTING wait = 'X'.\nELSE.\n  CALL FUNCTION 'BAPI_TRANSACTION_ROLLBACK'.\nENDIF.",
-  guarded:"* Guarded update report (team standard)\nSELECT-OPTIONS: s_key FOR ztable-key.\nPARAMETERS:     p_over AS CHECKBOX.\nPARAMETERS:     p_test AS CHECKBOX DEFAULT 'X'.\n\nSTART-OF-SELECTION.\n  SELECT * FROM ztable INTO TABLE @DATA(lt) WHERE key IN @s_key.\n  DATA lt_out LIKE lt.\n  LOOP AT lt ASSIGNING FIELD-SYMBOL(<r>).\n*   decide + record ONLY what changes -> APPEND <r> TO lt_out.\n  ENDLOOP.\n  IF p_test = abap_false.\n    UPDATE ztable FROM TABLE @lt_out.\n    COMMIT WORK.\n  ENDIF.\n* then show lt_out in an SALV grid (see the SALV template)"
+  "authcheck": "AUTHORITY-CHECK OBJECT 'Z_OBJECT'\n  ID 'ACTVT' FIELD '03'\n  ID 'FIELD1' FIELD lv_value.\nCASE sy-subrc.\n  WHEN 0.  \" allowed\n  WHEN 4.  \" has the object, not this value\n  WHEN 12. \" no authorization for the object at all\nENDCASE.",
+  "authdummy": "\" Only care about plant: skip the activity with DUMMY\nAUTHORITY-CHECK OBJECT 'M_MSEG_WWA'\n  ID 'ACTVT' DUMMY\n  ID 'WERKS' FIELD lv_plant.",
+  "tcode": "CALL FUNCTION 'AUTHORITY_CHECK_TCODE'\n  EXPORTING  tcode  = 'ZBRW_UPLOAD'\n  EXCEPTIONS ok     = 0\n             not_ok = 1\n             OTHERS = 2.\nIF sy-subrc <> 0.\n  MESSAGE 'You are not allowed to start this upload' TYPE 'E'.\nENDIF.",
+  "dcl": "@EndUserText.label: 'Access control'\n@MappingRole: true\ndefine role ZI_MY_VIEW_DCL {\n  grant select on ZI_MyView\n    where ( CompanyCode ) = aspect pfcg_auth( F_BKPF_BUK, BUKRS, ACTVT = '03' );\n}",
+  "dcl2": "@EndUserText.label: 'Access control, two conditions'\n@MappingRole: true\ndefine role ZI_MY_VIEW_DCL {\n  grant select on ZI_MyView\n    where ( Plant ) = aspect pfcg_auth( M_MSEG_WWA, WERKS, ACTVT = '03' )\n      and Status <> 'X';\n}",
+  "annot": `@AccessControl.authorizationCheck: #CHECK
+@EndUserText.label: 'Stops for the driver app'
+define view entity ZI_MyView
+  as select from ztable
+{
+  key id    as Id,
+      werks as Plant
+}`,
+  "roles": "REPORT zuser_roles.\nPARAMETERS p_user TYPE xubname OBLIGATORY.\n\nSELECT agr_name, from_dat, to_dat\n  FROM agr_users\n  WHERE uname = @p_user\n  ORDER BY agr_name\n  INTO TABLE @DATA(lt_roles).\n\ncl_salv_table=>factory( IMPORTING r_salv_table = DATA(lo)\n                        CHANGING  t_table      = lt_roles ).\nlo->display( ).",
+  "authget": "DATA lt_values TYPE STANDARD TABLE OF usvalues.\nCALL FUNCTION 'SUSR_USER_AUTH_FOR_OBJ_GET'\n  EXPORTING  user_name  = lv_user\n             sel_object = 'S_TCODE'\n  TABLES     values     = lt_values\n  EXCEPTIONS OTHERS     = 1.",
+  "report": "REPORT zmy_report.\n\nPARAMETERS p_test AS CHECKBOX DEFAULT 'X'.\n\nSTART-OF-SELECTION.\n  \" read, check, then change only when p_test is off",
+  "try": "TRY.\n    \" risky code\n  CATCH cx_root INTO DATA(lx_err).\n    MESSAGE lx_err->get_text( ) TYPE 'I'.\nENDTRY."
 };
 function loadTpl(){
   const k = document.getElementById("tpl").value;
@@ -182,7 +232,7 @@ function renderSnips(){
   const q = (document.getElementById("snipSearch").value || "").toLowerCase();
   const list = DB.snips.filter(s => (s.name + s.note + s.code).toLowerCase().includes(q));
   const g = document.getElementById("snipGrid");
-  if (!list.length){ g.innerHTML = '<div class="empty"><div class="big">❖</div>No snippets yet. Build one in the editor and hit “Save as snippet”.</div>'; return; }
+  if (!list.length){ g.innerHTML = '<div class="empty"><div class="big">❖</div>No snippets yet. Build one in the editor and hit “Add as snippet”.</div>'; return; }
   g.innerHTML = list.map(s => `<div class="card">
     <span class="tag SNIPPET">snippet</span>
     <h3 style="margin-top:8px">${escH(s.name)}</h3>
@@ -210,7 +260,7 @@ document.querySelectorAll("#refFilter button").forEach(b => b.onclick = () => {
 });
 function openRef(id){
   editRefId = id || null;
-  const r = id ? DB.refs.find(x => x.id === id) : { type:"FM", name:"", desc:"", code:"" };
+  const r = id ? DB.refs.find(x => x.id === id) : { type:"AUTH", name:"", desc:"", code:"" };
   document.getElementById("refTitle").textContent = id ? "Edit entry" : "New entry";
   refType.value = r.type; refName.value = r.name; refDesc.value = r.desc; refCode.value = r.code || "";
   document.getElementById("refModal").classList.add("show");
@@ -231,7 +281,7 @@ function renderRefs(){
   const q = (document.getElementById("refSearch").value || "").toLowerCase();
   const list = DB.refs.filter(r => (refFilterT === "ALL" || r.type === refFilterT) && (r.name + r.desc).toLowerCase().includes(q));
   const g = document.getElementById("refGrid");
-  if (!list.length){ g.innerHTML = '<div class="empty"><div class="big">⌕</div>No entries here yet. Add the FMs and BAPIs you discover so you never lose them.</div>'; return; }
+  if (!list.length){ g.innerHTML = '<div class="empty"><div class="big">⌕</div>No entries here yet. Add the authorization objects, tables and reports you look up so you never lose them.</div>'; return; }
   g.innerHTML = list.map(r => `<div class="card">
     <span class="tag ${r.type}">${r.type}</span>
     <h3 style="margin-top:8px;font-family:monospace">${escH(r.name)}</h3>
@@ -308,7 +358,7 @@ function renderInbox(){
   if (items.length){ badge.style.display = "inline-block"; badge.textContent = items.length; }
   else { badge.style.display = "none"; }
   const g = document.getElementById("inboxGrid");
-  if (!items.length){ g.innerHTML = '<div class="empty"><div class="big">📥</div>Nothing here yet. Ask Claude in chat to write some ABAP, then press Ctrl+R — it shows up here.</div>'; return; }
+  if (!items.length){ g.innerHTML = '<div class="empty"><div class="big">📥</div>Nothing here yet. Ask Claude in chat for a trace analysis, a role design or a check, then press Ctrl+R. It shows up here.</div>'; return; }
   g.innerHTML = items.map((it, i) => `<div class="card">
     <span class="tag SNIPPET">from claude</span>
     <h3 style="margin-top:8px">${escH(it.title || ("Snippet " + (i + 1)))}</h3>
@@ -334,50 +384,193 @@ function inboxSave(i){
 
 /* ---------- cheat sheet ---------- */
 const CHEAT = [
-  { h:"Declarations", items:[
-    ["Variable","DATA lv_count TYPE i."],
-    ["Inline declaration","DATA(lv_x) = 5."],
-    ["Internal table","DATA lt_tab TYPE TABLE OF kna1."],
-    ["Structure","DATA ls_row TYPE kna1."],
-    ["Constant","CONSTANTS c_max TYPE i VALUE 100."]]},
-  { h:"Open SQL", items:[
-    ["Select all","SELECT * FROM kna1 INTO TABLE @DATA(lt)."],
-    ["Single row","SELECT SINGLE name1 FROM kna1 INTO @DATA(lv) WHERE kunnr = @lv_k."],
-    ["With condition","SELECT * FROM mara INTO TABLE @DATA(lt) WHERE matnr IN @s_matnr."],
-    ["Count","SELECT COUNT(*) FROM kna1 INTO @DATA(lv_n)."]]},
-  { h:"Control flow", items:[
-    ["IF","IF lv_x > 0.\n  \" ...\nELSEIF lv_x = 0.\n  \" ...\nELSE.\n  \" ...\nENDIF."],
-    ["CASE","CASE lv_x.\n  WHEN 1. \" ...\n  WHEN OTHERS. \" ...\nENDCASE."],
-    ["LOOP","LOOP AT lt INTO DATA(ls).\n  \" ...\nENDLOOP."],
-    ["DO / WHILE","DO 5 TIMES.\n  \" sy-index\nENDDO."]]},
-  { h:"Tables", items:[
-    ["Read","READ TABLE lt INTO ls WITH KEY kunnr = lv_k."],
-    ["Append","APPEND ls TO lt."],
-    ["Modify","MODIFY lt FROM ls INDEX 1."],
-    ["Delete","DELETE lt WHERE kunnr = lv_k."],
-    ["Sort","SORT lt BY kunnr DESCENDING."]]},
-  { h:"Useful patterns", items:[
-    ["Check subrc","IF sy-subrc = 0. \" success\nENDIF."],
-    ["Message","MESSAGE 'Done' TYPE 'S'."],
-    ["String template","DATA(lv_t) = |Hello { lv_name }|."],
-    ["Commit","COMMIT WORK AND WAIT."]]},
-  { h:"SAP transactions (your toolkit)", items:[
-    ["SE38 — ABAP Editor (reports)","SE38"],
-    ["SE80 — Object Navigator","SE80"],
-    ["SE11 — Data Dictionary","SE11"],
-    ["SE16N — display table data","SE16N"],
-    ["SE37 — Function Modules","SE37"],
-    ["SE18 / SE19 — BAdI definition / implementation","SE18"],
-    ["SM36 / SM37 — schedule / monitor jobs","SM36"],
-    ["ST22 — short dumps","ST22"],
-    ["SE09 — Transport Organizer","SE09"],
-    ["WE02 — IDoc list","WE02"]]},
-  { h:"Report standards (house rules)", items:[
-    ["Selection screen","SELECT-OPTIONS: s_field FOR table-field.\nINITIALIZATION.\n  s_field-low = 'X'. s_field-sign = 'I'. s_field-option = 'EQ'. APPEND s_field."],
-    ["Test-run guard","PARAMETERS p_test AS CHECKBOX DEFAULT 'X'.\nIF p_test = abap_false.\n  \" do the update + COMMIT WORK\nENDIF."],
-    ["Don't overwrite","IF <row>-field IS NOT INITIAL AND p_over = abap_false.\n  CONTINUE.\nENDIF."],
-    ["Log only changes","APPEND VALUE #( ... ) TO lt_output.   \" only when actually changed"],
-    ["SALV the result","cl_salv_table=>factory( IMPORTING r_salv_table = DATA(lo)\n                       CHANGING  t_table = lt_output ).\nlo->display( )."]]}
+  {
+    "h": "Missing authorization: the order that works",
+    "items": [
+      [
+        "1. Last failed check",
+        "SU53\n(for someone else: SU53 -> Display for other user)"
+      ],
+      [
+        "2. Not conclusive? Trace it",
+        "STAUTHTRACE -> user -> activate\nreproduce the error -> evaluate"
+      ],
+      [
+        "3. Fix the default, not the role",
+        "SU24 -> transaction or service\n-> object -> proposal / check indicator"
+      ],
+      [
+        "4. Pull it into the role",
+        "PFCG -> Authorizations -> Expert mode\n-> Read old data and merge with new"
+      ],
+      [
+        "5. Make it effective",
+        "PFCG -> User tab -> User comparison\n(or PFUD for many roles)"
+      ],
+      [
+        "6. What does the user hold now?",
+        "SU56 -> Authorization values"
+      ]
+    ]
+  },
+  {
+    "h": "AUTHORITY-CHECK in code",
+    "items": [
+      [
+        "Basic check",
+        "AUTHORITY-CHECK OBJECT 'S_TCODE'\n  ID 'TCD' FIELD 'SU01'."
+      ],
+      [
+        "Ignore one field",
+        "AUTHORITY-CHECK OBJECT 'M_MSEG_WWA'\n  ID 'ACTVT' DUMMY\n  ID 'WERKS' FIELD lv_plant."
+      ],
+      [
+        "What sy-subrc means",
+        "0  = authorized\n4  = has the object, not these values\n12 = no authorization for the object"
+      ],
+      [
+        "Transaction check",
+        "CALL FUNCTION 'AUTHORITY_CHECK_TCODE'\n  EXPORTING tcode = 'SU01'\n  EXCEPTIONS ok = 0 not_ok = 1 OTHERS = 2."
+      ]
+    ]
+  },
+  {
+    "h": "CDS access control (DCL)",
+    "items": [
+      [
+        "Switch the check on",
+        "@AccessControl.authorizationCheck: #CHECK"
+      ],
+      [
+        "Filter by a PFCG object",
+        "grant select on ZI_View\n  where ( CompanyCode ) = aspect pfcg_auth( F_BKPF_BUK, BUKRS, ACTVT = '03' );"
+      ],
+      [
+        "Full access (on purpose)",
+        "grant select on ZI_View;"
+      ],
+      [
+        "Test as the user",
+        "Data preview in ADT, logged on as a test user\n(your own access hides the problem)"
+      ]
+    ]
+  },
+  {
+    "h": "Fiori launchpad",
+    "items": [
+      [
+        "Tile missing",
+        "Role menu: catalog + space (or group)\n/UI2/FLIA: does the intent resolve?"
+      ],
+      [
+        "App opens, then fails",
+        "/IWFND/ERROR_LOG for the user and time"
+      ],
+      [
+        "Clear caches",
+        "SE38 -> /UI2/INVALIDATE_CLIENT_CACHES\nthen clear the browser cache"
+      ],
+      [
+        "Readable errors",
+        "&sap-ui-debug=true"
+      ],
+      [
+        "After deploying an app",
+        "SE38 -> /UI5/APP_INDEX_CALCULATE"
+      ]
+    ]
+  },
+  {
+    "h": "Gateway and OData",
+    "items": [
+      [
+        "403 on a GET",
+        "S_SERVICE missing: add the service to the role\nPFCG -> Menu -> Authorization Default -> TADIR Service -> R3TR IWSG <SERVICE>_0001"
+      ],
+      [
+        "403 on a POST only",
+        "CSRF token: fetch with x-csrf-token: Fetch,\nsend it back with the same session cookie"
+      ],
+      [
+        "404 or \"service not found\"",
+        "/IWFND/MAINT_SERVICE: service and ICF node active?"
+      ],
+      [
+        "500",
+        "/IWBEP/ERROR_LOG: the business error behind it"
+      ],
+      [
+        "Replay a call",
+        "/IWFND/GW_CLIENT -> GET /sap/opu/odata/sap/<SERVICE>/$metadata"
+      ]
+    ]
+  },
+  {
+    "h": "Users and passwords",
+    "items": [
+      [
+        "Password rules",
+        "login/min_password_lng\nlogin/fails_to_user_lock\nlogin/password_expiration_time"
+      ],
+      [
+        "Rules for some users only",
+        "SECPOL -> security policy -> SU01 Logon data"
+      ],
+      [
+        "Why is this user locked?",
+        "USR02-UFLAG: 32 global, 64 admin, 128 failed logons"
+      ],
+      [
+        "Many users at once",
+        "SU10 -> lock / unlock / add role"
+      ]
+    ]
+  },
+  {
+    "h": "Security transactions (your toolkit)",
+    "items": [
+      [
+        "SU01 — users",
+        "SU01"
+      ],
+      [
+        "PFCG — roles",
+        "PFCG"
+      ],
+      [
+        "SUIM — who has what",
+        "SUIM"
+      ],
+      [
+        "SU53 — last failed check",
+        "SU53"
+      ],
+      [
+        "STAUTHTRACE — authorization trace",
+        "STAUTHTRACE"
+      ],
+      [
+        "SU24 — proposals",
+        "SU24"
+      ],
+      [
+        "RSAU_READ_LOG — security audit log",
+        "RSAU_READ_LOG"
+      ],
+      [
+        "STRUST — certificates",
+        "STRUST"
+      ],
+      [
+        "/IWFND/MAINT_SERVICE — OData services",
+        "/IWFND/MAINT_SERVICE"
+      ],
+      [
+        "/UI2/FLIA — launchpad intent analysis",
+        "/UI2/FLIA"
+      ]
+    ]
+  }
 ];
 function renderCheat(){
   document.getElementById("cheat").innerHTML = CHEAT.map(b => `<div class="cheat-block"><h3>${b.h}</h3><div class="grid">${
@@ -394,8 +587,8 @@ document.querySelectorAll(".modal-bg").forEach(mm => mm.addEventListener("click"
 function renderStats(){
   document.getElementById("stat-snip").textContent = DB.snips.length;
   document.getElementById("stat-ref").textContent  = DB.refs.length;
-  document.getElementById("stat-fm").textContent   = DB.refs.filter(r => r.type === "FM").length;
-  document.getElementById("stat-bapi").textContent = DB.refs.filter(r => r.type === "BAPI").length;
+  document.getElementById("stat-fm").textContent   = DB.refs.filter(r => r.type === "AUTH").length;
+  document.getElementById("stat-bapi").textContent = DB.refs.filter(r => r.type === "TABLE").length;
 }
 
 /* ---------- second brain / wiki ---------- */
@@ -686,132 +879,6 @@ function toggleCmt(btn){
   else { th.setAttribute("hidden",""); btn.classList.remove("open"); }
 }
 
-/* ---------- timesheet ---------- */
-function tsHours(){ return MEM.hours; }
-function tsWeek(){
-  const box = window.CLAUDE_TIMESHEET || {};
-  const weeks = Array.isArray(box.weeks) ? box.weeks : [];
-  return weeks.length ? weeks[weeks.length - 1] : null;
-}
-function tsPillClass(client){
-  const c = (client || "").toLowerCase();
-  /* two pill colours; anything that is not the second client falls back to the first */
-  const second = (window.CLAUDE_TIMESHEET && window.CLAUDE_TIMESHEET.secondClient || "").toLowerCase();
-  if (second && c.indexOf(second) === 0) return "c2";
-  return "c1";
-}
-function tsPrettyDate(iso){
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || "");
-  if (!m) return iso || "";
-  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  return String(Number(m[3])) + " " + months[Number(m[2]) - 1];
-}
-function renderTimesheet(){
-  const box = window.CLAUDE_TIMESHEET || {};
-  const stamp = document.getElementById("tsStamp");
-  if (stamp) stamp.textContent = box.generatedAt ? ("snapshot " + box.generatedAt) : "";
-  const el = document.getElementById("tsDays"); if (!el) return;
-  const wk = tsWeek();
-  const lbl = document.getElementById("tsWeekLabel");
-
-  if (!wk){
-    if (lbl) lbl.textContent = "No week in the snapshot";
-    el.innerHTML = '<div class="ts-empty">Nothing reconstructed yet. Ask Claude to rebuild the week and refresh with Ctrl+R.</div>';
-    tsTotal();
-    return;
-  }
-  if (lbl) lbl.textContent = wk.label || "";
-
-  const hrs = tsHours();
-  let i = 0;
-  el.innerHTML = (wk.days || []).map(d => {
-    const head = '<div class="ts-day-h">'
-      + '<span class="ts-dow">' + escH(d.dow || "") + '</span>'
-      + '<span class="ts-date">' + escH(tsPrettyDate(d.date)) + '</span>'
-      + '<span class="ts-day-rule"></span></div>';
-
-    const entries = Array.isArray(d.entries) ? d.entries : [];
-    let body;
-    if (!entries.length){
-      body = '<div class="ts-empty">'
-        + '<span class="ts-pill none">No trace</span>'
-        + '<p>' + escH(d.note || "Nothing recorded in either system.") + '</p></div>';
-    } else {
-      body = entries.map(e => {
-        const val = hrs[e.id] != null ? String(hrs[e.id]) : "";
-        const ref = e.refUrl
-          ? '<a class="ts-ref" href="' + escH(e.refUrl) + '" target="_blank" rel="noopener">' + escH(e.ref || "") + '</a>'
-          : '<span class="ts-ref plain">' + escH(e.ref || "") + '</span>';
-        return '<article class="ts-entry">'
-          + '<div class="ts-entry-top">' + ref
-          + '<span class="ts-pill ' + tsPillClass(e.client) + '">' + escH(e.client || "") + '</span>'
-          + '<span class="ts-src">' + escH(e.source || "") + '</span></div>'
-          + '<h4 class="ts-entry-title">' + escH(e.title || "") + '</h4>'
-          + '<p class="ts-what">' + escH(e.what || "") + '</p>'
-          + '<div class="ts-hrs"><label for="ts-h-' + escH(e.id) + '">Hours</label>'
-          + '<input id="ts-h-' + escH(e.id) + '" type="text" inputmode="decimal" placeholder="0.0"'
-          + ' value="' + escH(val) + '" data-ts-id="' + escH(e.id) + '" oninput="tsSetHours(this)"></div>'
-          + '</article>';
-      }).join("");
-    }
-    return '<section class="ts-day ts-reveal" style="--i:' + (i++) + '">' + head + body + '</section>';
-  }).join("");
-
-  tsTotal();
-  tsReveal();
-}
-function tsSetHours(input){
-  const id = input.dataset.tsId; if (!id) return;
-  const store = tsHours();
-  const raw = (input.value || "").trim().replace(",", ".");
-  if (!raw) delete store[id]; else store[id] = raw;
-  tsTotal();
-}
-function tsTotal(){
-  const out = document.getElementById("tsTotal"); if (!out) return;
-  const wk = tsWeek(); const hrs = tsHours();
-  let sum = 0;
-  if (wk) (wk.days || []).forEach(d => (d.entries || []).forEach(e => {
-    const n = parseFloat(hrs[e.id]); if (!isNaN(n)) sum += n;
-  }));
-  out.textContent = sum.toFixed(1);
-}
-let tsObserver;
-function tsReveal(){
-  const items = document.querySelectorAll("#view-timesheet .ts-reveal");
-  if (!("IntersectionObserver" in window)){ items.forEach(n => n.classList.add("in")); return; }
-  if (tsObserver) tsObserver.disconnect();
-  tsObserver = new IntersectionObserver(es => {
-    es.forEach(en => { if (en.isIntersecting){ en.target.classList.add("in"); tsObserver.unobserve(en.target); } });
-  }, { rootMargin: "0px 0px -8% 0px", threshold: .05 });
-  items.forEach(n => tsObserver.observe(n));
-}
-function tsCopy(){
-  const wk = tsWeek(); if (!wk){ toast("Nothing to copy"); return; }
-  const hrs = tsHours();
-  const lines = [wk.label || "Timesheet", ""];
-  (wk.days || []).forEach(d => {
-    lines.push((d.dow || "") + " " + tsPrettyDate(d.date));
-    const entries = Array.isArray(d.entries) ? d.entries : [];
-    if (!entries.length){
-      lines.push("  (no system trace) " + (d.note || ""));
-    } else {
-      entries.forEach(e => {
-        const h = hrs[e.id] ? hrs[e.id] + "h" : "__h";
-        lines.push("  [" + h + "] " + (e.client || "") + " · " + (e.ref || "") + " — " + (e.title || ""));
-        if (e.what) lines.push("        " + e.what);
-      });
-    }
-    lines.push("");
-  });
-  let sum = 0;
-  (wk.days || []).forEach(d => (d.entries || []).forEach(e => {
-    const n = parseFloat(hrs[e.id]); if (!isNaN(n)) sum += n;
-  }));
-  lines.push("Total logged: " + sum.toFixed(1) + " hours");
-  copy(lines.join("\n"));
-}
-
 /* ---------- t-codes ---------- */
 function tcodeModules(){
   const items = (window.CLAUDE_TCODES && window.CLAUDE_TCODES.items) || [];
@@ -900,7 +967,7 @@ function renderSearch(){
   const ib = ((window.CLAUDE_INBOX && window.CLAUDE_INBOX.items) || []).filter(it => searchHit(q, (it.title||"")+(it.note||"")+(it.code||"")));
   if (ib.length) html += '<div class="srch-grp">From Claude (inbox) · ' + ib.length + '</div>' + ib.map(it => srchRow("go('inbox')", "📥 " + escH(it.title||""), searchSnippet(q,(it.note||"")+" "+(it.code||"")))).join("");
   const refs = ((window.CLAUDE_REFS && window.CLAUDE_REFS.items) || []).filter(r => searchHit(q,(r.name||"")+(r.desc||"")+(r.code||""))).concat((DB.refs||[]).filter(r => searchHit(q,(r.name||"")+(r.desc||"")+(r.code||""))));
-  if (refs.length) html += '<div class="srch-grp">References (FM/BAPI/BADI) · ' + refs.length + '</div>' + refs.map(r => srchRow("go('ref')", escH((r.type||"") + " " + (r.name||"")), searchSnippet(q,r.desc||""))).join("");
+  if (refs.length) html += '<div class="srch-grp">References · ' + refs.length + '</div>' + refs.map(r => srchRow("go('ref')", escH((r.type||"") + " " + (r.name||"")), searchSnippet(q,r.desc||""))).join("");
   const sn = (DB.snips||[]).filter(s => searchHit(q,(s.name||"")+(s.note||"")+(s.code||"")));
   if (sn.length) html += '<div class="srch-grp">Snippets · ' + sn.length + '</div>' + sn.map(s => srchRow("go('snip')", "❖ " + escH(s.name||""), searchSnippet(q,(s.note||"")+" "+(s.code||"")))).join("");
   out.innerHTML = html || '<div class="empty"><div class="big">🔍</div>No matches.</div>';
@@ -930,10 +997,10 @@ function buildRain(){
   host.innerHTML = html;
 }
 buildRain();
-renderSnips(); renderRefs(); renderCheat(); renderStats(); renderInbox(); wikiInit(); renderTickets(); renderTimesheet(); tcodeInit(); renderRecent(); renderSearch();
+renderSnips(); renderRefs(); renderCheat(); renderStats(); renderInbox(); wikiInit(); renderTickets(); tcodeInit(); renderRecent(); renderSearch();
 
 /* ---------- open on the view named in the URL hash (works on file:// and on a sub-path) ---------- */
-/*   #wiki, #search ... open a view; #search?q=commit pre-fills the search; #wiki?page=bapi-luw opens a page */
+/*   #wiki, #search ... open a view; #search?q=S_SERVICE pre-fills the search; #wiki?page=BRW-112 opens a page */
 (function(){
   const raw = decodeURIComponent((location.hash || "").slice(1));
   const v = raw.split("?")[0];

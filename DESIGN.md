@@ -7,7 +7,7 @@ behind a structural blueprint grid. Calm, instrument-panel, never neon or busy.
 
 Hard rule: this is a self-contained **offline** static app (`index.html` + `css/` + `js/` +
 `data/`). No CDNs, no web fonts, no build step. All fonts must be system fonts. Nothing here
-may change the JS data contract (`CLAUDE_INBOX/REFS/WIKI/TICKETS/TIMESHEET/TCODES/COMMENTS`) or
+may change the JS data contract (`CLAUDE_INBOX/REFS/WIKI/TICKETS/TCODES/COMMENTS`) or
 any DOM id / class / onclick the script depends on.
 
 ---
